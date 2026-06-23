@@ -1,0 +1,35 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+body {
+    font-family: 'Quicksand', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f6f8;
+}
+
+/* Hover effect cho navlink header */
+.nav-link {
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #e6a323 !important;
+    /* Đổi màu cam vàng khi hover */
+}
+
+/* Hover effect cho footer links */
+.footer-link {
+    transition: opacity 0.3s ease;
+    opacity: 0.8;
+}
+
+.footer-link:hover {
+    opacity: 1;
+    color: #e6a323 !important;
+}
+
+/* Custom placeholder input */
+input::placeholder {
+    color: #a0a0a0 !important;
+    font-size: 14px;
+}
