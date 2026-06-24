@@ -53,58 +53,73 @@ const createProduct = async (data, files) => {
     }
 };
 
-const getProducts = async ({ keyword, pageNumber, pageSize }) => {
+const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNumber, pageSize }) => {
     const limit = parseInt(pageSize, 10);
     const offset = parseInt(pageNumber, 10) * limit;
 
-    let countQuery = 'SELECT COUNT(p.id) as total FROM products p';
-
-    let dataQuery = `
-        SELECT p.*, 
-               (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) as cover_image
-        FROM products p
-    `;
-
+    let whereClauses = [];
     let queryParams = [];
 
+    // 1. Lọc theo Keyword (Tên hoặc Hãng)
     if (keyword) {
-        const searchPattern = `%${keyword}%`;
-        const whereClause = ' WHERE p.name_product LIKE ? OR p.brand LIKE ?';
-
-        countQuery += whereClause;
-        dataQuery += whereClause;
-
-        queryParams.push(searchPattern, searchPattern);
+        whereClauses.push('(p.name_product LIKE ? OR p.brand LIKE ?)');
+        queryParams.push(`%${keyword}%`, `%${keyword}%`);
     }
 
-    dataQuery += ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+    // 2. Lọc theo Thương hiệu (Brands)
+    if (brands && brands.length > 0) {
+        // Tạo chuỗi ?, ?, ? tương ứng với số lượng brand
+        const placeholders = brands.map(() => '?').join(',');
+        whereClauses.push(`p.brand IN (${placeholders})`);
+        queryParams.push(...brands);
+    }
 
-    // 1. Lấy tổng số lượng
+    // 3. Lọc theo Khoảng giá (Price)
+    if (minPrice !== null && minPrice !== undefined) {
+        whereClauses.push('p.price_product >= ?');
+        queryParams.push(minPrice);
+    }
+    if (maxPrice !== null && maxPrice !== undefined) {
+        whereClauses.push('p.price_product <= ?');
+        queryParams.push(maxPrice);
+    }
+
+    // 4. Lọc theo Kích thước (Sizes)
+    if (sizes && sizes.length > 0) {
+        const placeholders = sizes.map(() => '?').join(',');
+        // Sử dụng EXISTS để tìm sản phẩm có size đó mà không làm lặp dữ liệu (tránh JOIN)
+        whereClauses.push(`EXISTS (SELECT 1 FROM product_sizes ps WHERE ps.product_id = p.id AND ps.size IN (${placeholders}))`);
+        queryParams.push(...sizes);
+    }
+
+    // Ghép các điều kiện WHERE lại với nhau
+    let whereString = '';
+    if (whereClauses.length > 0) {
+        whereString = ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    // Ráp vào câu truy vấn chính
+    let countQuery = 'SELECT COUNT(p.id) as total FROM products p' + whereString;
+    let dataQuery = 'SELECT p.* FROM products p' + whereString + ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+    // --- THỰC THI TRUY VẤN ---
     const [countResult] = await db.execute(countQuery, queryParams);
     const totalElements = countResult[0].total;
 
-    // 2. Lấy danh sách sản phẩm
     const [products] = await db.execute(dataQuery, queryParams);
 
-    // 3. XỬ LÝ LẤY SIZE CHO CÁC SẢN PHẨM NÀY
+    // Xử lý lấy sizes và ảnh (GIỮ NGUYÊN NHƯ BƯỚC TRƯỚC BẠN ĐÃ LÀM)
     if (products.length > 0) {
-        // Lấy ra danh sách các product_id
         const productIds = products.map(p => p.id);
-
-        // Tạo chuỗi dấu chấm hỏi (?, ?, ?) tương ứng với số lượng ID
         const placeholders = productIds.map(() => '?').join(',');
 
-        // Truy vấn lấy tất cả size của các sản phẩm đang hiển thị trên trang này
-        const [sizes] = await db.execute(
+        const [dbSizes] = await db.execute(
             `SELECT product_id, size, quantity FROM product_sizes WHERE product_id IN (${placeholders})`,
             productIds
         );
 
-        // Gom nhóm size theo product_id bằng JavaScript
-        const sizesByProduct = sizes.reduce((acc, currentSize) => {
-            if (!acc[currentSize.product_id]) {
-                acc[currentSize.product_id] = [];
-            }
+        const sizesByProduct = dbSizes.reduce((acc, currentSize) => {
+            if (!acc[currentSize.product_id]) acc[currentSize.product_id] = [];
             acc[currentSize.product_id].push({
                 size: currentSize.size,
                 quantity: currentSize.quantity
@@ -112,9 +127,21 @@ const getProducts = async ({ keyword, pageNumber, pageSize }) => {
             return acc;
         }, {});
 
-        // Gắn mảng sizes vào từng sản phẩm tương ứng
+        const [images] = await db.execute(
+            `SELECT product_id, image_url FROM product_images WHERE product_id IN (${placeholders})`,
+            productIds
+        );
+
+        const imagesByProduct = images.reduce((acc, currentImg) => {
+            if (!acc[currentImg.product_id]) acc[currentImg.product_id] = [];
+            acc[currentImg.product_id].push(currentImg.image_url);
+            return acc;
+        }, {});
+
         products.forEach(p => {
-            p.sizes = sizesByProduct[p.id] || []; // Nếu không có size thì trả về mảng rỗng []
+            p.sizes = sizesByProduct[p.id] || [];
+            const allImages = imagesByProduct[p.id] || [];
+            p.cover_image = allImages.slice(0, 2);
         });
     }
 

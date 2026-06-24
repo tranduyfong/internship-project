@@ -7,10 +7,16 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import store from './app/store';
 import Layout from './container/Layout';
-import { HomePage, ProductPage, AboutPage, ContactPage, OrderPage, ProfilePage } from './pages/Pages';
+
+import HomePage from './pages/HomePage';
+// CHÚ Ý CHỖ NÀY: Import trực tiếp file ProductPage mới tạo
+import ProductPage from './pages/ProductPage';
+import { AboutPage, ContactPage, OrderPage, ProfilePage } from './pages/Pages';
+
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 
 const theme = createTheme({
   typography: { fontFamily: "'Quicksand', sans-serif" },
@@ -25,7 +31,11 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
+
+              {/* Route trỏ tới Component ProductPage thực tế */}
               <Route path="san-pham" element={<ProductPage />} />
+              <Route path="san-pham/:id" element={<ProductDetailPage />} />
+
               <Route path="gioi-thieu" element={<AboutPage />} />
               <Route path="lien-he" element={<ContactPage />} />
               <Route path="kiem-tra-don-hang" element={<OrderPage />} />

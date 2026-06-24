@@ -34,14 +34,41 @@ const create = async (req, res) => {
 const getList = async (req, res) => {
     try {
         const keyword = req.query.keyword || '';
+
+        // Mặc định pageSize là 20 theo đúng ý bạn
         const pageNumber = req.query.pageNumber !== undefined && req.query.pageNumber !== '' ? parseInt(req.query.pageNumber, 10) : 0;
         const pageSize = req.query.pageSize !== undefined && req.query.pageSize !== '' ? parseInt(req.query.pageSize, 10) : 20;
+
+        // Xử lý mảng Brands: Tách chuỗi "Nike,Adidas" thành ['Nike', 'Adidas']
+        let brands = [];
+        if (req.query.brands) {
+            brands = req.query.brands.split(',').map(item => item.trim());
+        }
+
+        // Xử lý mảng Sizes: Tách chuỗi "39,40" thành [39, 40]
+        let sizes = [];
+        if (req.query.sizes) {
+            sizes = req.query.sizes.split(',').map(item => parseInt(item.trim(), 10)).filter(num => !isNaN(num));
+        }
+
+        // Xử lý giá tiền
+        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
         if (pageNumber < 0 || pageSize <= 0) {
             return errorResponse(res, 'VALIDATION_FAILED', 'Tham số phân trang không hợp lệ', 400);
         }
 
-        const result = await productService.getProducts({ keyword, pageNumber, pageSize });
+        // Truyền toàn bộ object điều kiện xuống Service
+        const result = await productService.getProducts({
+            keyword,
+            brands,
+            sizes,
+            minPrice,
+            maxPrice,
+            pageNumber,
+            pageSize
+        });
 
         return successResponse(res, result.data, result.pagination, 'Lấy danh sách sản phẩm thành công');
     } catch (error) {
