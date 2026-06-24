@@ -21,9 +21,13 @@ const Header: React.FC = () => {
     const headerRef = useRef<HTMLElement>(null);
     useHideOnScroll(headerRef);
 
-    const { user, cartCount } = useSelector((state: RootState) => state.auth);
+    // Lấy danh sách cartItems thật từ Redux
+    const { user, cartItems } = useSelector((state: RootState) => state.auth);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    // Tính số lượng hiển thị trên icon giỏ hàng
+    const actualCartCount = cartItems ? cartItems.length : 0;
 
     const handleLogout = () => {
         dispatch(logoutSuccess());
@@ -42,25 +46,33 @@ const Header: React.FC = () => {
     return (
         <header ref={headerRef} className="bg-white shadow-sm sticky-top">
             <div className="container d-flex align-items-center justify-content-between py-3">
-                {/* Nút Hamburger cho Mobile */}
                 <Box sx={{ display: { xs: 'flex', lg: 'none' } }}>
                     <IconButton onClick={() => setMobileOpen(true)} color="inherit"><MenuIcon /></IconButton>
                 </Box>
 
-                {/* Logo */}
                 <Link to="/" style={{ textDecoration: 'none', color: 'black' }}>
                     <h2 style={{ fontWeight: 900, fontStyle: 'italic', margin: 0, fontSize: '2rem' }}>beck.</h2>
                 </Link>
 
-                {/* Menu điều hướng lớn */}
                 <HeaderNav links={navLinks} />
 
-                {/* Khối chức năng điều khiển */}
-                <HeaderActions user={user} cartCount={cartCount} isHovered={isHovered} setIsHovered={setIsHovered} onLogout={handleLogout} />
+                {/* Truyền số lượng thực tế xuống Component con để hiển thị */}
+                <HeaderActions
+                    user={user}
+                    cartCount={actualCartCount}
+                    isHovered={isHovered}
+                    setIsHovered={setIsHovered}
+                    onLogout={handleLogout}
+                />
             </div>
 
-            {/* Drawer trượt cho Mobile */}
-            <HeaderMobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} links={navLinks} user={user} onLogout={handleLogout} />
+            <HeaderMobileDrawer
+                open={mobileOpen}
+                onClose={() => setMobileOpen(false)}
+                links={navLinks}
+                user={user}
+                onLogout={handleLogout}
+            />
         </header>
     );
 };

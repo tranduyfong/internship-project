@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, CircularProgress, colors } from '@mui/material';
 import { toast } from 'react-toastify';
 
 import { getProductDetailRequest } from '../store/actions';
-import { addToCartEffect } from '../store/slice';
+import { addToCartRequest } from '../store/actions';
 import type { RootState } from '../app/store';
 
 // Import 4 khối container vừa được tách rời
@@ -17,6 +17,7 @@ import ProductTabs from '../container/product-detail/ProductTabs';
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const { currentProduct: product, detailLoading, user } = useSelector((state: RootState) => state.auth);
 
@@ -48,11 +49,21 @@ const ProductDetailPage: React.FC = () => {
             toast.warning('Vui lòng lựa chọn kích thước size giày trước!');
             return;
         }
-
-        alert(`[Hệ thống Xác nhận]\n- Sản phẩm: ${product.name_product}\n- Kích thước size: ${size}\n- Số lượng mua: ${qty}`);
-
-        if (type === 'cart') {
-            dispatch(addToCartEffect(qty));
+        if (type === 'buy') {
+            navigate('/thanh-toan', {
+                state: {
+                    checkoutItems: [{
+                        id: product.id,
+                        name: product.name_product,
+                        size: size,
+                        quantity: qty,
+                        price: parseFloat(product.price_product),
+                        image: product.images[0]?.image_url
+                    }]
+                }
+            });
+        } else {
+            dispatch(addToCartRequest({ productId: product.id, size: size, quantity: qty }));
         }
     };
 

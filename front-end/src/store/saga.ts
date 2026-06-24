@@ -9,16 +9,23 @@ import type { ProductDetailResponse, ProductPageResponse } from '../types/produc
 import {
     loginRequest, registerRequest, forgotPasswordRequest, verifyOtpRequest,
     getProductsRequest, // Import Action mới
-    getProductDetailRequest
+    getProductDetailRequest,
+    fetchCartRequest,
+    addToCartRequest,
+    updateCartItemRequest,
+    deleteCartItemRequest
 } from './actions';
 import {
     setLoading, authSuccess, authFailure, setStep, setEmailForReset,
     setProductLoading, getProductsSuccess, // Import Reducers mới
     setDetailLoading,
-    getDetailSuccess
+    getDetailSuccess,
+    setCartLoading,
+    getCartSuccess
 } from './slice';
 
 import type { ProductFilterParams } from '../service/product';
+import { cartService } from '../service/cart';
 
 function* handleLogin(action: PayloadAction<any>): Generator<any, void, any> {
     try {
@@ -107,6 +114,49 @@ function* handleGetProductDetail(action: PayloadAction<string | number>): Genera
     }
 }
 
+function* handleFetchCart(): Generator<any, void, any> {
+    try {
+        yield put(setCartLoading(true));
+        const response = yield call(cartService.getCart);
+        yield put(getCartSuccess(response.data || []));
+    } catch (error: any) {
+        // Không ném toast lỗi nếu chưa đăng nhập để tránh phiền
+    } finally {
+        yield put(setCartLoading(false));
+    }
+}
+
+function* handleAddToCart(action: PayloadAction<{ productId: number; size: number; quantity: number }>): Generator<any, void, any> {
+    try {
+        const { productId, size, quantity } = action.payload;
+        const response = yield call(cartService.addToCart, productId, size, quantity);
+        toast.success(response.message || 'Đã thêm vào giỏ hàng');
+        yield put(fetchCartRequest()); // Tải lại giỏ hàng
+    } catch (error: any) {
+        toast.error(error.message);
+    }
+}
+
+function* handleUpdateCartItem(action: PayloadAction<{ cartId: number; quantity: number }>): Generator<any, void, any> {
+    try {
+        const { cartId, quantity } = action.payload;
+        yield call(cartService.updateCartItem, cartId, quantity);
+        yield put(fetchCartRequest());
+    } catch (error: any) {
+        toast.error(error.message);
+    }
+}
+
+function* handleDeleteCartItem(action: PayloadAction<number>): Generator<any, void, any> {
+    try {
+        const response = yield call(cartService.deleteCartItem, action.payload);
+        toast.success(response.message || 'Đã xóa sản phẩm');
+        yield put(fetchCartRequest());
+    } catch (error: any) {
+        toast.error(error.message);
+    }
+}
+
 export default function* authSaga(): Generator<any, void, any> {
     yield takeLatest(loginRequest.type, handleLogin);
     yield takeLatest(registerRequest.type, handleRegister);
@@ -115,4 +165,9 @@ export default function* authSaga(): Generator<any, void, any> {
 
     yield takeLatest(getProductsRequest.type, handleGetProducts);
     yield takeLatest(getProductDetailRequest.type, handleGetProductDetail);
+
+    yield takeLatest(fetchCartRequest.type, handleFetchCart);
+    yield takeLatest(addToCartRequest.type, handleAddToCart);
+    yield takeLatest(updateCartItemRequest.type, handleUpdateCartItem);
+    yield takeLatest(deleteCartItemRequest.type, handleDeleteCartItem);
 }

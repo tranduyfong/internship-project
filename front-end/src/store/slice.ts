@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { AuthState } from './model';
 import type { Product, ProductDetail, ProductPageResponse } from '../types/product';
+import type { CartItem } from '../types/cart';
 
 const savedUser = localStorage.getItem('user');
 const savedToken = localStorage.getItem('token');
@@ -14,7 +15,9 @@ interface ExtendedState extends AuthState {
 
     currentProduct: ProductDetail | null;
     detailLoading: boolean;
-    cartCount: number;
+
+    cartItems: CartItem[]; // Thay thế cho cartCount
+    cartLoading: boolean;
 }
 
 const initialState: ExtendedState = {
@@ -31,7 +34,9 @@ const initialState: ExtendedState = {
     totalElements: 0,
     currentProduct: null,
     detailLoading: false,
-    cartCount: 0,
+
+    cartItems: [],
+    cartLoading: false,
 };
 
 const authSlice = createSlice({
@@ -70,15 +75,13 @@ const authSlice = createSlice({
         setDetailLoading: (state, action: PayloadAction<boolean>) => { state.detailLoading = action.payload; },
         getDetailSuccess: (state, action: PayloadAction<ProductDetail>) => { state.currentProduct = action.payload; },
 
-        // Reducer mới cho Fake Giỏ Hàng
-        addToCartEffect: (state, action: PayloadAction<number>) => {
-            state.cartCount += action.payload;
-        }
+        setCartLoading: (state, action: PayloadAction<boolean>) => { state.cartLoading = action.payload; },
+        getCartSuccess: (state, action: PayloadAction<CartItem[]>) => { state.cartItems = action.payload; },
     },
 });
 
 export const {
     setLoading, authSuccess, authFailure, setStep, setEmailForReset, logoutSuccess,
-    setProductLoading, getProductsSuccess, setDetailLoading, getDetailSuccess, addToCartEffect
+    setProductLoading, getProductsSuccess, setDetailLoading, getDetailSuccess, setCartLoading, getCartSuccess
 } = authSlice.actions;
 export default authSlice.reducer;
