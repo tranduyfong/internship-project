@@ -7,14 +7,14 @@ import CartTable from '../container/cart/CartTable';
 import CartSummary from '../container/cart/CartSummary';
 import ConfirmDialog from '../components/ConfirmDialog'; // Import Component dùng chung vừa tạo
 
-import { fetchCartRequest, updateCartItemRequest, deleteCartItemRequest } from '../store/actions';
+import { fetchCartRequest, updateCartItemRequest, deleteCartItemRequest } from '../store/actions/cartActions';
 import type { RootState } from '../app/store';
 
 const CartPage: React.FC = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { cartItems, cartLoading, user } = useSelector((state: RootState) => state.auth);
-
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { cartItems, cartLoading } = useSelector((state: RootState) => state.cart);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     // State quản lý việc mở Popup xác nhận xóa

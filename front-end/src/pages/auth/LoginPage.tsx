@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import InputField from '../../components/InputField';
-import { loginRequest } from '../../store/actions';
 import type { RootState } from '../../app/store';
+import { loginRequest } from '../../store/actions/authActions';
 
 const LoginPage: React.FC = () => {
     const [form, setForm] = useState({ email: '', password: '' });
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { loading } = useSelector((state: RootState) => state.auth);
+    const { authLoading: loading, user } = useSelector((state: RootState) => state.auth);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
+
+    useEffect(() => {
+        // Nếu user đã tồn tại (đăng nhập thành công hoặc đã có phiên đăng nhập từ trước)
+        if (user) {
+            navigate('/');
+        }
+    }, [user, navigate]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

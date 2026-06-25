@@ -8,7 +8,7 @@ import FilterSidebar from '../components/FilterSidebar';
 import Pagination from '../components/Pagination';
 import ProductListGrid from '../container/product/ProductListGrid'; // Import lưới vừa bóc tách
 
-import { getProductsRequest } from '../store/actions';
+import { getProductsRequest } from '../store/actions/productActions';
 import type { RootState } from '../app/store';
 
 const ProductPage: React.FC = () => {
@@ -17,7 +17,7 @@ const ProductPage: React.FC = () => {
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
     const [filters, setFilters] = useState({ brands: [] as string[], sizes: [] as number[], priceRange: 'all' });
 
-    const { products, productLoading, totalPages, totalElements } = useSelector((state: RootState) => state.auth);
+    const { products, productLoading, totalPages, totalElements } = useSelector((state: RootState) => state.product);
 
     const parsePriceRange = (range: string) => {
         switch (range) {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box } from '@mui/material';
-import { getProductsRequest } from '../store/actions';
 import type { RootState } from '../app/store';
+import { getProductsRequest } from '../store/actions/productActions';
 
 // Import các cấu phần biệt lập từ thư mục container mới tạo
 import HomeTabs from '../container/home/HomeTabs';
@@ -15,7 +15,7 @@ const HomePage: React.FC = () => {
     const dispatch = useDispatch();
 
     // Trích xuất State sản phẩm toàn cục của Redux Store
-    const { products, productLoading } = useSelector((state: RootState) => state.auth);
+    const { products, productLoading } = useSelector((state: RootState) => state.product);
 
     // Định tuyến bộ lọc truyền tham số Query String chính xác cho API Backend
     const getBrandForApi = (tabName: string) => {

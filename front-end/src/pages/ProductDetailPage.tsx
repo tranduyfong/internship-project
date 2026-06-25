@@ -3,23 +3,23 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, CircularProgress, colors } from '@mui/material';
 import { toast } from 'react-toastify';
-
-import { getProductDetailRequest } from '../store/actions';
-import { addToCartRequest } from '../store/actions';
 import type { RootState } from '../app/store';
 
-// Import 4 khối container vừa được tách rời
 import ProductImages from '../container/product-detail/ProductImages';
 import ProductInfo from '../container/product-detail/ProductInfo';
 import ProductPolicy from '../container/product-detail/ProductPolicy';
 import ProductTabs from '../container/product-detail/ProductTabs';
+
+import { getProductDetailRequest } from '../store/actions/productActions';
+import { addToCartRequest } from '../store/actions/cartActions';
 
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { currentProduct: product, detailLoading, user } = useSelector((state: RootState) => state.auth);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { currentProduct: product, detailLoading } = useSelector((state: RootState) => state.product);
 
     const [activeTab, setActiveTab] = useState(0);
     const tabsRef = useRef<HTMLDivElement>(null);

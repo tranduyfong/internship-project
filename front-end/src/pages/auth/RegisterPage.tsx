@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import InputField from '../../components/InputField';
-import { registerRequest } from '../../store/actions';
 import type { RootState } from '../../app/store';
+import { registerRequest } from '../../store/actions/authActions';
 
 const RegisterPage: React.FC = () => {
     const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' });
     const dispatch = useDispatch();
-    const { loading } = useSelector((state: RootState) => state.auth);
+
+    const { authLoading: loading } = useSelector((state: RootState) => state.auth);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [e.target.name]: e.target.value });
 

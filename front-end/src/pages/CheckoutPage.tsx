@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import CheckoutForm from '../container/checkout/CheckoutForm';
 import type { CheckoutFormData } from '../container/checkout/CheckoutForm';
 import CheckoutSummary from '../container/checkout/CheckoutSummary';
-import { fetchProfileRequest } from '../store/actions';
+import { fetchProfileRequest } from '../store/actions/profileActions';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../app/store';
 
@@ -15,7 +15,8 @@ const CheckoutPage: React.FC = () => {
     const location = useLocation();
     // Nhận dữ liệu truyền từ trang Giỏ Hàng hoặc Chi Tiết SP
     const checkoutItems = location.state?.checkoutItems || [];
-    const { fullProfile, user } = useSelector((state: RootState) => state.auth);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { fullProfile } = useSelector((state: RootState) => state.profile);
 
     const [formData, setFormData] = useState<CheckoutFormData>({
         email: '', fullName: '', phone: '', addressDetail: '',

@@ -10,7 +10,7 @@ import HeaderActions from './header/HeaderActions';
 import HeaderMobileDrawer from './header/HeaderMobileDrawer';
 
 import useHideOnScroll from '../hooks/useHideOnScroll';
-import { logoutSuccess } from '../store/slice';
+import { logoutSuccess } from '../store/slices/authSlice';
 import { toast } from 'react-toastify';
 import type { RootState } from '../app/store';
 
@@ -22,7 +22,9 @@ const Header: React.FC = () => {
     useHideOnScroll(headerRef);
 
     // Lấy danh sách cartItems thật từ Redux
-    const { user, cartItems } = useSelector((state: RootState) => state.auth);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { cartItems } = useSelector((state: RootState) => state.cart);
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
 

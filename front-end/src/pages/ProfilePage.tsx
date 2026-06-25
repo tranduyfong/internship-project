@@ -9,13 +9,17 @@ import AddressList from '../container/profile/AddressList';
 import AddressFormDialog from '../container/profile/AddressFormDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-import { fetchProfileRequest, updateProfileRequest, addAddressRequest, updateAddressRequest, deleteAddressRequest, setDefaultAddressRequest } from '../store/actions';
+import {
+    fetchProfileRequest, updateProfileRequest, addAddressRequest,
+    updateAddressRequest, deleteAddressRequest, setDefaultAddressRequest
+} from '../store/actions/profileActions';
 import type { RootState } from '../app/store';
 import type { UserAddress } from '../types/user';
 
 const ProfilePage: React.FC = () => {
     const dispatch = useDispatch();
-    const { user, fullProfile } = useSelector((state: RootState) => state.auth);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { fullProfile } = useSelector((state: RootState) => state.profile);
 
     const [activeTab, setActiveTab] = useState<'info' | 'address'>('info');
 

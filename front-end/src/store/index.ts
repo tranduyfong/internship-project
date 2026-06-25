@@ -1,10 +1,7 @@
-// src/app/store.ts
 import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
-
-// Trỏ đường dẫn về thư mục store mới của chúng ta
-import rootReducer from '../store/rootReducer';
-import rootSaga from '../store/sagas/rootSaga';
+import rootReducer from './rootReducer';
+import rootSaga from './sagas/rootSaga';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -16,7 +13,6 @@ const store = configureStore({
 
 sagaMiddleware.run(rootSaga);
 
-// 2 DÒNG NÀY LÀ CHÌA KHÓA ĐỂ XÓA LỖI TYPESCRIPT Ở CÁC TRANG:
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
