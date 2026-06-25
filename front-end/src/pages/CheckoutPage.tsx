@@ -9,6 +9,7 @@ import CheckoutSummary from '../container/checkout/CheckoutSummary';
 import { fetchProfileRequest } from '../store/actions/profileActions';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../app/store';
+import { checkoutRequest } from '../store/actions/receiptActions';
 
 const CheckoutPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -70,35 +71,39 @@ const CheckoutPage: React.FC = () => {
     }
 
     const handlePlaceOrder = () => {
-        // Validate cơ bản
+        // Validate form (Bỏ qua nếu đã đủ thông tin)
         if (!formData.fullName || !formData.phone || !formData.province || !formData.district || !formData.ward || !formData.addressDetail) {
             toast.error('Vui lòng điền đầy đủ thông tin nhận hàng!');
             return;
         }
 
+        // Tính toán tổng tiền
         const totalAmount = checkoutItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
 
-        // Xử lý IN RA CONSOLE rõ ràng bằng tên chữ (Không dùng ID/Code)
-        console.log("============= ĐƠN HÀNG MỚI =============");
-        console.log("1. THÔNG TIN KHÁCH HÀNG:");
-        console.log(`- Họ tên: ${formData.fullName}`);
-        console.log(`- Điện thoại: ${formData.phone}`);
-        console.log(`- Email: ${formData.email}`);
-        console.log(`- Ghi chú: ${formData.note}`);
-        console.log(`- Phương thức thanh toán: ${formData.paymentMethod.toUpperCase()}`);
-        console.log("");
-        console.log("2. ĐỊA CHỈ GIAO HÀNG:");
-        console.log(`- ${formData.addressDetail}, ${formData.ward?.name}, ${formData.district?.name}, ${formData.province?.name}`);
-        console.log("");
-        console.log("3. CHI TIẾT SẢN PHẨM:");
-        checkoutItems.forEach((item: any, idx: number) => {
-            console.log(`[SP ${idx + 1}] ${item.name} | Size: ${item.size} | Số lượng: ${item.quantity} | Giá: ${item.price}đ`);
-        });
-        console.log("----------------------------------------");
-        console.log(`=> TỔNG THANH TOÁN: ${totalAmount}đ`);
-        console.log("========================================");
+        // XÂY DỰNG PAYLOAD KHỚP 100% VỚI POSTMAN CỦA BẠN
+        const payload = {
+            fullName: formData.fullName,
+            phone: formData.phone,
+            email: formData.email,
+            note: formData.note,
+            paymentMethod: formData.paymentMethod.toUpperCase(), // Ép kiểu in hoa "COD" hoặc "VNPAY"
+            addressDetail: formData.addressDetail,
+            province: { name: formData.province.name, code: formData.province.code },
+            district: { name: formData.district.name, code: formData.district.code },
+            ward: { name: formData.ward.name, code: formData.ward.code },
+            checkoutItems: checkoutItems.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                size: item.size,
+                quantity: item.quantity,
+                price: item.price,
+                cover_image: item.image // Đổi tên trường cho khớp với BE
+            })),
+            totalAmount: totalAmount
+        };
 
-        toast.success('Đặt hàng thành công! Vui lòng kiểm tra Console log.');
+        // Bắn request gọi Saga
+        dispatch(checkoutRequest(payload));
     };
 
     return (

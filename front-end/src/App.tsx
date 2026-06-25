@@ -11,7 +11,7 @@ import Layout from './container/Layout';
 import HomePage from './pages/HomePage';
 // CHÚ Ý CHỖ NÀY: Import trực tiếp file ProductPage mới tạo
 import ProductPage from './pages/ProductPage';
-import { AboutPage, ContactPage, OrderPage } from './pages/Pages';
+import { AboutPage, ContactPage } from './pages/Pages';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -20,6 +20,8 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ProfilePage from './pages/ProfilePage';
+import ReceiptPage from './pages/ReceiptPage';
+import VNPayReturnPage from './pages/VNPayReturnPage';
 
 const theme = createTheme({
   typography: { fontFamily: "'Quicksand', sans-serif" },
@@ -30,7 +32,7 @@ const App: React.FC = () => {
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <Router>
-          <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+          <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
@@ -41,8 +43,9 @@ const App: React.FC = () => {
 
               <Route path="gioi-thieu" element={<AboutPage />} />
               <Route path="lien-he" element={<ContactPage />} />
-              <Route path="kiem-tra-don-hang" element={<OrderPage />} />
+              <Route path="kiem-tra-don-hang" element={<ReceiptPage />} />
               <Route path="tai-khoan" element={<ProfilePage />} />
+              <Route path="vnpay-return" element={<VNPayReturnPage />} />
 
               <Route path="dang-nhap" element={<LoginPage />} />
               <Route path="dang-ky" element={<RegisterPage />} />

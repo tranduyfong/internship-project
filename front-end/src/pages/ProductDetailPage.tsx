@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Typography, CircularProgress, colors } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 import type { RootState } from '../app/store';
 
