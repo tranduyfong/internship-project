@@ -26,9 +26,16 @@ const DeliveryInfoForm: React.FC<DeliveryInfoFormProps> = ({ formData, setFormDa
                 <InputField label="" name="phone" placeholder="Nhập số điện thoại, ví dụ: +84123..." value={formData.phone} onChange={handleChange} />
                 <InputField label="" name="addressDetail" placeholder="Nhập địa chỉ chi tiết..." value={formData.addressDetail} onChange={handleChange} />
 
-                {/* Component Nhóm chọn địa chỉ API */}
+                {/* ĐÃ SỬA: Truyền đúng cấu trúc locationData và onChange */}
                 <Box sx={{ mb: 3 }}>
-                    <LocationSelectGroup formData={formData} setFormData={setFormData} />
+                    <LocationSelectGroup
+                        locationData={{
+                            province: formData.province,
+                            district: formData.district,
+                            ward: formData.ward
+                        }}
+                        onChange={(field, val) => setFormData(prev => ({ ...prev, [field]: val }))}
+                    />
                 </Box>
 
                 <textarea

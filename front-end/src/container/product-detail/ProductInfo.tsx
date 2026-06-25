@@ -70,7 +70,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ id, name, price, sizes, onAct
 
                 {selectedSizeObj && (
                     <Typography sx={{ fontSize: '13px', color: '#2e7d32', fontWeight: 'bold', mt: 1, mb: 1, fontFamily: 'Quicksand' }}>
-                        Kho hàng: Còn lại {selectedSizeObj.quantity} sản phẩm cho size {selectedSizeObj.size}
+                        Kho hàng: Còn lại {selectedSizeObj.quantity}
                     </Typography>
                 )}
 

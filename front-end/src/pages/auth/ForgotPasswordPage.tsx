@@ -12,7 +12,7 @@ const ForgotPasswordPage: React.FC = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { step, emailForReset, loading } = useSelector((state: RootState) => state.auth);
+    const { step, emailForReset, authLoading: loading } = useSelector((state: RootState) => state.auth);
 
     const handleSendEmail = (e: React.FormEvent) => {
         e.preventDefault();

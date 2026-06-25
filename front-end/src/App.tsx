@@ -11,7 +11,7 @@ import Layout from './container/Layout';
 import HomePage from './pages/HomePage';
 // CHÚ Ý CHỖ NÀY: Import trực tiếp file ProductPage mới tạo
 import ProductPage from './pages/ProductPage';
-import { AboutPage, ContactPage, OrderPage, ProfilePage } from './pages/Pages';
+import { AboutPage, ContactPage, OrderPage } from './pages/Pages';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -19,6 +19,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import ProfilePage from './pages/ProfilePage';
 
 const theme = createTheme({
   typography: { fontFamily: "'Quicksand', sans-serif" },

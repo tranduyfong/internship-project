@@ -1,33 +1,43 @@
+// src/store/slice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AuthState } from './model';
-import type { Product, ProductDetail, ProductPageResponse } from '../types/product';
+import type { Product, ProductDetail } from '../types/product';
 import type { CartItem } from '../types/cart';
+import type { FullUserProfile } from '../types/user';
 
-const savedUser = localStorage.getItem('user');
-const savedToken = localStorage.getItem('token');
+interface AppState {
+    // Auth State
+    user: any | null;
+    accessToken: string | null;
+    authLoading: boolean;
+    authError: string | null;
+    step: number;
+    emailForReset: string;
 
-// Định nghĩa cấu trúc State mở rộng bao gồm cả sản phẩm
-interface ExtendedState extends AuthState {
+    // Product State
     products: Product[];
     productLoading: boolean;
     totalPages: number;
     totalElements: number;
-
     currentProduct: ProductDetail | null;
     detailLoading: boolean;
 
-    cartItems: CartItem[]; // Thay thế cho cartCount
+    // Cart State
+    cartItems: CartItem[];
     cartLoading: boolean;
+
+    // Profile State
+    fullProfile: FullUserProfile | null;
+    profileLoading: boolean;
 }
 
-const initialState: ExtendedState = {
-    user: savedUser ? JSON.parse(savedUser) : null,
-    accessToken: savedToken || null,
-    loading: false,
-    error: null,
+const initialState: AppState = {
+    user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
+    accessToken: localStorage.getItem('token') || null,
+    authLoading: false,
+    authError: null,
     step: 1,
-    emailForReset: null,
-    // State sản phẩm khởi tạo
+    emailForReset: '',
+
     products: [],
     productLoading: false,
     totalPages: 1,
@@ -37,51 +47,84 @@ const initialState: ExtendedState = {
 
     cartItems: [],
     cartLoading: false,
+
+    fullProfile: null,
+    profileLoading: false,
 };
 
-const authSlice = createSlice({
+const appSlice = createSlice({
     name: 'app',
     initialState,
     reducers: {
-        // Các Reducers cũ của Auth giữ nguyên...
-        setLoading: (state, action: PayloadAction<boolean>) => { state.loading = action.payload; },
+        // Reducers Auth
+        setAuthLoading: (state, action: PayloadAction<boolean>) => {
+            state.authLoading = action.payload;
+        },
         authSuccess: (state, action: PayloadAction<{ user: any; accessToken: string }>) => {
             state.user = action.payload.user;
             state.accessToken = action.payload.accessToken;
-            state.error = null;
-
+            state.authError = null;
             localStorage.setItem('user', JSON.stringify(action.payload.user));
             localStorage.setItem('token', action.payload.accessToken);
         },
-        authFailure: (state, action: PayloadAction<string>) => { state.error = action.payload; },
-        setStep: (state, action: PayloadAction<number>) => { state.step = action.payload; },
-        setEmailForReset: (state, action: PayloadAction<string | null>) => { state.emailForReset = action.payload; },
+        authFailure: (state, action: PayloadAction<string>) => {
+            state.authError = action.payload;
+        },
         logoutSuccess: (state) => {
             state.user = null;
             state.accessToken = null;
+            state.authError = null;
+            state.fullProfile = null;
+            state.cartItems = [];
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+        },
+        setStep: (state, action: PayloadAction<number>) => {
+            state.step = action.payload;
+        },
+        setEmailForReset: (state, action: PayloadAction<string>) => {
+            state.emailForReset = action.payload;
         },
 
-        // Các Reducers xử lý sản phẩm mới
+        // Reducers Sản phẩm
         setProductLoading: (state, action: PayloadAction<boolean>) => {
             state.productLoading = action.payload;
         },
-        getProductsSuccess: (state, action: PayloadAction<ProductPageResponse>) => {
+        getProductsSuccess: (state, action: PayloadAction<{ data: Product[]; totalPages: number; totalElements: number }>) => {
             state.products = action.payload.data;
             state.totalPages = action.payload.totalPages;
             state.totalElements = action.payload.totalElements;
         },
+        setDetailLoading: (state, action: PayloadAction<boolean>) => {
+            state.detailLoading = action.payload;
+        },
+        getDetailSuccess: (state, action: PayloadAction<ProductDetail>) => {
+            state.currentProduct = action.payload;
+        },
 
-        // Reducers mới cho Product Detail
-        setDetailLoading: (state, action: PayloadAction<boolean>) => { state.detailLoading = action.payload; },
-        getDetailSuccess: (state, action: PayloadAction<ProductDetail>) => { state.currentProduct = action.payload; },
+        // Reducers Giỏ hàng
+        setCartLoading: (state, action: PayloadAction<boolean>) => {
+            state.cartLoading = action.payload;
+        },
+        getCartSuccess: (state, action: PayloadAction<CartItem[]>) => {
+            state.cartItems = action.payload;
+        },
 
-        setCartLoading: (state, action: PayloadAction<boolean>) => { state.cartLoading = action.payload; },
-        getCartSuccess: (state, action: PayloadAction<CartItem[]>) => { state.cartItems = action.payload; },
+        // Reducers Thông tin cá nhân (Profile)
+        setProfileLoading: (state, action: PayloadAction<boolean>) => {
+            state.profileLoading = action.payload;
+        },
+        getProfileSuccess: (state, action: PayloadAction<FullUserProfile>) => {
+            state.fullProfile = action.payload;
+        }
     },
 });
 
 export const {
-    setLoading, authSuccess, authFailure, setStep, setEmailForReset, logoutSuccess,
-    setProductLoading, getProductsSuccess, setDetailLoading, getDetailSuccess, setCartLoading, getCartSuccess
-} = authSlice.actions;
-export default authSlice.reducer;
+    setAuthLoading, authSuccess, authFailure, logoutSuccess, setStep, setEmailForReset,
+    setProductLoading, getProductsSuccess, setDetailLoading, getDetailSuccess,
+    setCartLoading, getCartSuccess,
+    setProfileLoading, getProfileSuccess
+} = appSlice.actions;
+
+export default appSlice.reducer;
