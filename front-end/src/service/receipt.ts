@@ -24,13 +24,13 @@ export const receiptService = {
         return data;
     },
 
-    getMyReceipts: async () => {
-        const res = await fetch(`${BASE_URL}/receipts/me`, {
+    getMyReceipts: async (page: number = 1, limit: number = 5) => {
+        const res = await fetch(`${BASE_URL}/receipts/me?page=${page}&limit=${limit}`, {
             method: 'GET',
             headers: getAuthHeaders()
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Lỗi tải danh sách đơn hàng');
+        if (!res.ok) throw new Error(data.message || 'Lỗi tải đơn hàng');
         return data;
     },
 

@@ -44,3 +44,48 @@ header {
 header.hide {
     transform: translateY(-100%);
 }
+
+/* Đổi màu dải đếm ngược thành màu VÀNG ĐẬM cho toàn bộ web */
+:root {
+    --toastify-color-progress-light: #ffb300 !important;
+    --toastify-color-progress-success: #ffb300 !important;
+    --toastify-color-progress-warning: #ffb300 !important;
+    --toastify-color-progress-error: #d32f2f !important;
+    /* Lỗi thì vẫn nên giữ màu đỏ */
+    --toastify-color-progress-info: #ffb300 !important;
+}
+
+/* Ép thư viện giữ nguyên bo góc như trên máy tính */
+.Toastify__toast {
+    border-radius: 12px !important;
+}
+
+/* Xử lý riêng cho màn hình điện thoại (dưới 480px) */
+@media only screen and (max-width: 480px) {
+
+    /* 1. Ép độ rộng không vượt quá 55% màn hình (để 55% chữ sẽ đỡ bị ép quá vụn) */
+    .Toastify__toast-container {
+        width: 55vw !important;
+        margin: 0 !important;
+    }
+
+    /* 2. Thông báo thao tác (ở giữa bên trên): Cách lề trên 70px để KHÔNG CHE HEADER */
+    .Toastify__toast-container--top-center {
+        top: 70px !important;
+        right: 10px !important;
+        left: auto !important;
+        /* Nằm gọn về góc trái một chút cho thuận mắt */
+        transform: none !important;
+    }
+
+    /* 3. Thông báo mua hàng (ở góc dưới trái) */
+    .Toastify__toast-container--bottom-left {
+        bottom: 20px !important;
+        left: 10px !important;
+    }
+
+    /* Tạo khoảng cách nếu có nhiều thông báo hiển thị cùng lúc */
+    .Toastify__toast {
+        margin-bottom: 12px !important;
+    }
+}

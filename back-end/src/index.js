@@ -1,12 +1,27 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http'); // 1. Thêm thư viện http
 const rootRoutes = require('./routes/index');
+const socketConfig = require('./configs/socket.config'); // 2. Thêm file cấu hình Socket
 
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
+const server = http.createServer(app); // 3. Tạo HTTP server bọc lấy Express app
+
+// 4. Khởi tạo Socket.io
+const io = socketConfig.init(server);
+
+// Lắng nghe khi có khách hàng truy cập web
+io.on('connection', (socket) => {
+    console.log('🟢 Một khách hàng mới vừa truy cập web! Socket ID:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('🔴 Khách hàng đã thoát web:', socket.id);
+    });
+});
 
 // Tự động tạo thư mục lưu ảnh nếu chưa tồn tại
 const uploadDir = path.join(__dirname, '../uploads/products');
@@ -32,6 +47,7 @@ app.use((req, res, next) => {
 
 // Chạy server
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
+// 5. Thay app.listen thành server.listen
+server.listen(PORT, () => {
     console.log(`Server is running strongly on port ${PORT}`);
 });

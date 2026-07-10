@@ -29,13 +29,17 @@ function* handleCheckout(action: PayloadAction<any>): Generator<any, void, any> 
     }
 }
 
-function* handleGetMyReceipts(): Generator<any, void, any> {
+function* handleGetMyReceipts(action: any): Generator<any, void, any> {
     try {
         yield put(reducers.setReceiptLoading(true));
-        const response = yield call(receiptService.getMyReceipts);
-        yield put(reducers.getReceiptsSuccess(response.data || []));
+
+        // Gọi API với page và limit
+        const response = yield call(receiptService.getMyReceipts, action.payload.page, action.payload.limit);
+
+        // Truyền thẳng response.data (Gồm cả receipts và pagination) vào reducer
+        yield put(reducers.getMyReceiptsSuccess(response.data));
     } catch (error: any) {
-        toast.error('Lỗi khi tải danh sách đơn hàng');
+        // Xử lý lỗi
     } finally {
         yield put(reducers.setReceiptLoading(false));
     }

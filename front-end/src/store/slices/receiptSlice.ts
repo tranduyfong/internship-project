@@ -1,5 +1,4 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-// Đổi model tương ứng thành receiptModel (bạn tự đổi tên file model nhé)
 import type { ReceiptState } from '../models/receiptModel';
 import type { Receipt } from '../../types/receipt';
 
@@ -7,6 +6,7 @@ const initialState: ReceiptState = {
     receipts: [],
     receiptLoading: false,
     checkoutLoading: false,
+    totalPages: 1,
 };
 
 const receiptSlice = createSlice({
@@ -15,9 +15,11 @@ const receiptSlice = createSlice({
     reducers: {
         setCheckoutLoading: (state, action: PayloadAction<boolean>) => { state.checkoutLoading = action.payload; },
         setReceiptLoading: (state, action: PayloadAction<boolean>) => { state.receiptLoading = action.payload; },
-        getReceiptsSuccess: (state, action: PayloadAction<Receipt[]>) => { state.receipts = action.payload; },
+        getMyReceiptsSuccess: (state, action) => {
+            state.receiptLoading = false; state.receipts = action.payload.receipts; state.totalPages = action.payload.pagination.totalPage;
+        },
     }
 });
 
-export const { setCheckoutLoading, setReceiptLoading, getReceiptsSuccess } = receiptSlice.actions;
+export const { setCheckoutLoading, setReceiptLoading, getMyReceiptsSuccess } = receiptSlice.actions;
 export default receiptSlice.reducer;

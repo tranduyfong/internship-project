@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, CircularProgress } from '@mui/material';
+import { Navigate } from 'react-router-dom';
+import Pagination from '../components/Pagination';
 
 import type { RootState } from '../app/store';
 import { getMyReceiptsRequest, repayRequest } from '../store/actions/receiptActions';
@@ -11,40 +13,42 @@ import ReceiptDetailModal from '../container/receipt/ReceiptDetailModal';
 
 const ReceiptPage: React.FC = () => {
     const dispatch = useDispatch();
-    const { receipts, receiptLoading } = useSelector((state: RootState) => state.receipt);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { receipts, receiptLoading, totalPages } = useSelector((state: RootState) => state.receipt);
 
     const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+    const [currentPage, setCurrentPage] = useState(0);
 
+    // Kéo dữ liệu khi có user
     useEffect(() => {
-        dispatch(getMyReceiptsRequest());
-    }, [dispatch]);
+        if (user) {
+            dispatch(getMyReceiptsRequest({ page: currentPage + 1, limit: 5 }));
+        }
+    }, [dispatch, user, currentPage]);
 
-    // Hàm quy định màu sắc cho Chip
-    const getStatusColor = (status?: string) => {
-        if (!status) return 'default';
-        switch (status.toUpperCase()) {
-            case 'PENDING': return 'warning';
-            case 'PROCESSING': return 'info';
-            case 'PAID': return 'success';
-            case 'SHIPPING': return 'info';
-            case 'COMPLETED': return 'success';
-            case 'CANCELLED': return 'error';
+    if (!user) {
+        return <Navigate to="/dang-nhap" replace />;
+    }
+
+    const getStatusColor = (status?: string): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
+        switch (status?.toLowerCase()) {
+            case 'pending': return 'warning';
+            case 'processing': return 'info';
+            case 'shipped': return 'primary';
+            case 'delivered': return 'success';
+            case 'cancelled': return 'error';
             default: return 'default';
         }
     };
 
-    // BỘ DỊCH THUẬT: Chuyển đổi tiếng Anh của Backend sang tiếng Việt
     const getVietnameseStatus = (status?: string) => {
-        if (!status) return 'Không xác định';
-        switch (status.toUpperCase()) {
-            case 'PENDING': return 'Chờ xử lý';
-            case 'PROCESSING': return 'Đang xử lý';
-            case 'PAID': return 'Đã thanh toán';
-            case 'UNPAID': return 'Chưa thanh toán';
-            case 'SHIPPING': return 'Đang giao hàng';
-            case 'COMPLETED': return 'Đã hoàn thành';
-            case 'CANCELLED': return 'Đã hủy';
-            default: return status;
+        switch (status?.toLowerCase()) {
+            case 'pending': return 'Chờ thanh toán';
+            case 'processing': return 'Đang xử lý';
+            case 'shipped': return 'Đang giao hàng';
+            case 'delivered': return 'Đã giao hàng';
+            case 'cancelled': return 'Đã hủy';
+            default: return status || 'Không rõ';
         }
     };
 
@@ -67,13 +71,26 @@ const ReceiptPage: React.FC = () => {
                     <Typography>Bạn chưa có đơn hàng nào.</Typography>
                 </Box>
             ) : (
-                <ReceiptTable
-                    receipts={receipts}
-                    onViewDetail={(receipt) => setSelectedReceipt(receipt)}
-                    getStatusColor={getStatusColor}
-                    getVietnameseStatus={getVietnameseStatus}
-                    onRepay={handleRepay}
-                />
+                <>
+                    <ReceiptTable
+                        receipts={receipts}
+                        onViewDetail={(receipt) => setSelectedReceipt(receipt)}
+                        getStatusColor={getStatusColor}
+                        getVietnameseStatus={getVietnameseStatus}
+                        onRepay={handleRepay}
+                    />
+
+                    {/* HIỂN THỊ PHÂN TRANG */}
+                    {totalPages > 1 && (
+                        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+                            <Pagination
+                                totalPages={totalPages}
+                                currentPage={currentPage}
+                                onPageChange={setCurrentPage}
+                            />
+                        </Box>
+                    )}
+                </>
             )}
 
             <ReceiptDetailModal

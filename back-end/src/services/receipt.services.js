@@ -205,19 +205,38 @@ const updatePaymentSuccess = async (orderCode) => {
     );
 };
 
-const getMyReceipts = async (userId) => {
-    // 1. Lấy danh sách các hóa đơn của user này (Sắp xếp mới nhất lên đầu)
+const getMyReceipts = async (userId, page = 1, limit = 10) => {
+    // 1. Tính toán vị trí bắt đầu lấy dữ liệu (Offset)
+    const offset = (page - 1) * limit;
+
+    // 2. Đếm tổng số lượng đơn hàng của user này
+    const [countResult] = await db.execute(
+        'SELECT COUNT(id) as total FROM receipts WHERE user_id = ?',
+        [userId]
+    );
+    const totalReceipts = countResult[0].total;
+    const totalPage = Math.ceil(totalReceipts / limit);
+
+    // 3. Lấy danh sách hóa đơn theo phân trang
     const [receipts] = await db.execute(
-        'SELECT * FROM receipts WHERE user_id = ? ORDER BY created_at DESC',
+        `SELECT * FROM receipts WHERE user_id = ? ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`,
         [userId]
     );
 
-    // Nếu không có đơn hàng nào thì trả về mảng rỗng luôn
+    // Nếu trang này không có đơn hàng nào, trả về mảng rỗng và dừng luôn để tiết kiệm DB
     if (receipts.length === 0) {
-        return [];
+        return {
+            receipts: [],
+            pagination: {
+                total: totalReceipts,
+                totalPage: totalPage,
+                currentPage: Number(page),
+                limit: Number(limit)
+            }
+        };
     }
 
-    // 2. Lấy danh sách ID của các hóa đơn này để query chi tiết sản phẩm
+    // 4. Lấy danh sách các sản phẩm (items) của các hóa đơn vừa lấy được
     const receiptIds = receipts.map(r => r.id);
     const placeholders = receiptIds.map(() => '?').join(',');
 
@@ -228,7 +247,7 @@ const getMyReceipts = async (userId) => {
         receiptIds
     );
 
-    // 3. Gom nhóm các item vào đúng hóa đơn của nó bằng JavaScript
+    // 5. Gom nhóm items vào đúng hóa đơn bằng JavaScript
     const itemsByReceipt = items.reduce((acc, item) => {
         if (!acc[item.receipt_id]) {
             acc[item.receipt_id] = [];
@@ -237,12 +256,32 @@ const getMyReceipts = async (userId) => {
         return acc;
     }, {});
 
-    // 4. Gắn mảng items vào từng receipt tương ứng
     receipts.forEach(receipt => {
         receipt.items = itemsByReceipt[receipt.id] || [];
     });
 
-    return receipts;
+    // 6. Trả về kết quả kèm thông tin phân trang
+    return {
+        receipts: receipts,
+        pagination: {
+            total: totalReceipts,
+            totalPage: totalPage,
+            currentPage: Number(page),
+            limit: Number(limit)
+        }
+    };
+};
+
+const getOrderDetailsForNotification = async (orderCode) => {
+    const [orderDetails] = await db.execute(`
+        SELECT r.shipping_full_name, ri.name_product, ri.img_src
+        FROM receipts r
+        JOIN receipt_items ri ON r.id = ri.receipt_id
+        WHERE r.order_code = ? LIMIT 1
+    `, [orderCode]);
+
+    // Trả về object dữ liệu nếu có, nếu không có thì trả về null
+    return orderDetails.length > 0 ? orderDetails[0] : null;
 };
 
 module.exports = {
@@ -250,5 +289,6 @@ module.exports = {
     restoreInventory,
     updatePaymentSuccess,
     getMyReceipts,
-    initiateRepay
+    initiateRepay,
+    getOrderDetailsForNotification
 };

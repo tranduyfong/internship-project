@@ -5,4 +5,5 @@ export interface ReceiptState {
     receipts: Receipt[];
     receiptLoading: boolean;
     checkoutLoading: boolean;
+    totalPages: number;
 }

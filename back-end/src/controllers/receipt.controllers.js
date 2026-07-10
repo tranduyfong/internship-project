@@ -2,6 +2,8 @@ const receiptService = require('../services/receipt.services');
 const { successResponse, errorResponse } = require('../utils/response.util');
 const vnpayInstance = require('../configs/vnpay.config');
 const { ProductCode } = require('vnpay'); // Sử dụng Enum chuẩn của thư viện
+const socketConfig = require('../configs/socket.config');
+const maskName = require('../utils/mask.name');
 
 const checkout = async (req, res) => {
     try {
@@ -32,6 +34,15 @@ const checkout = async (req, res) => {
                 orderCode: orderData.orderCode
             }, null, 'Chuyển hướng đến VNPay');
         }
+
+        const io = socketConfig.getIO();
+
+        io.emit('new_purchase', {
+            customerName: maskName(formData.fullName),
+            productName: formData.checkoutItems[0].name,
+            productImage: formData.checkoutItems[0].cover_image,
+            time: new Date()
+        });
 
         return successResponse(res, { orderCode: orderData.orderCode }, null, 'Đặt hàng thành công');
 
@@ -96,11 +107,14 @@ const repay = async (req, res) => {
 
 const getMyReceipts = async (req, res) => {
     try {
-        const userId = req.user.userId; // Trích xuất từ Token
+        const userId = req.user.userId;
 
-        const receipts = await receiptService.getMyReceipts(userId);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
 
-        return successResponse(res, receipts, null, 'Lấy danh sách đơn hàng thành công');
+        const result = await receiptService.getMyReceipts(userId, page, limit);
+
+        return successResponse(res, result, null, 'Lấy danh sách đơn hàng thành công');
     } catch (error) {
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
     }
@@ -123,6 +137,21 @@ const vnpayReturn = async (req, res) => {
         if (verify.isSuccess) {
             // Cập nhật trạng thái 'Paid' vào Database
             await receiptService.updatePaymentSuccess(orderCode);
+
+            // Gọi Service để lấy dữ liệu thông báo
+            const info = await receiptService.getOrderDetailsForNotification(orderCode);
+
+            if (info) {
+                const io = socketConfig.getIO();
+
+                io.emit('new_purchase', {
+                    customerName: maskName(info.shipping_full_name),
+                    productName: info.name_product,
+                    productImage: info.img_src,
+                    time: new Date()
+                });
+            }
+
             return successResponse(res, { orderCode }, null, 'Thanh toán thành công');
         } else {
             // Khách bấm hủy -> Hủy đơn và trả lại số lượng kho
