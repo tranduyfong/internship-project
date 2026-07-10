@@ -9,16 +9,46 @@ interface HeaderActionsProps {
     isHovered: boolean;
     setIsHovered: (val: boolean) => void;
     onLogout: () => void;
+
+    // Props mới cho phần tìm kiếm
+    keyword: string;
+    setKeyword: (val: string) => void;
+    handleSearchSubmit: () => void;
+    toggleMobileSearch: () => void;
 }
 
-const HeaderActions: React.FC<HeaderActionsProps> = ({ user, cartCount, isHovered, setIsHovered, onLogout }) => {
+const HeaderActions: React.FC<HeaderActionsProps> = ({
+    user, cartCount, isHovered, setIsHovered, onLogout,
+    keyword, setKeyword, handleSearchSubmit, toggleMobileSearch
+}) => {
+
+    const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearchSubmit();
+        }
+    };
+
     return (
         <div className="d-flex align-items-center gap-2 gap-md-3">
-            {/* Tìm kiếm */}
+            {/* Tìm kiếm màn hình máy tính (Giữ nguyên UI gốc) */}
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', backgroundColor: '#f1f3f4', borderRadius: '20px', padding: '2px 15px', width: '250px' }}>
-                <InputBase placeholder="Tìm kiếm..." sx={{ flex: 1, fontFamily: 'Quicksand', fontSize: '14px' }} />
-                <IconButton size="small"><Search fontSize="small" /></IconButton>
+                <InputBase
+                    placeholder="Tìm kiếm..."
+                    sx={{ flex: 1, fontFamily: 'Quicksand', fontSize: '14px' }}
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    onKeyDown={onKeyDown}
+                />
+                <IconButton size="small" onClick={handleSearchSubmit}>
+                    <Search fontSize="small" />
+                </IconButton>
             </Box>
+
+            {/* Nút tìm kiếm màn hình Mobile (Hiện cạnh giỏ hàng, ẩn trên máy tính) */}
+            <IconButton sx={{ display: { xs: 'flex', md: 'none' }, color: 'black' }} onClick={toggleMobileSearch}>
+                <Search />
+            </IconButton>
 
             {/* Giỏ hàng */}
             <IconButton component={Link} to="/gio-hang" sx={{ color: 'black' }}>

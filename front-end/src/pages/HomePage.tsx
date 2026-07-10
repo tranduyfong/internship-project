@@ -32,7 +32,7 @@ const HomePage: React.FC = () => {
         dispatch(getProductsRequest({
             keyword: '',
             pageNumber: 0,
-            pageSize: 20,
+            pageSize: 18,
             brands: getBrandForApi(activeTab)
         }));
     }, [dispatch, activeTab]);

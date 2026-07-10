@@ -2,8 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Box, IconButton } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
+import { Box, IconButton, Collapse, InputBase } from '@mui/material';
+import { Menu as MenuIcon, Search } from '@mui/icons-material';
 
 import HeaderNav from './header/HeaderNav';
 import HeaderActions from './header/HeaderActions';
@@ -17,6 +17,10 @@ import type { RootState } from '../app/store';
 const Header: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Thêm các state cho phần tìm kiếm
+    const [keyword, setKeyword] = useState('');
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
 
     const headerRef = useRef<HTMLElement>(null);
     useHideOnScroll(headerRef);
@@ -35,6 +39,21 @@ const Header: React.FC = () => {
         dispatch(logoutSuccess());
         toast.info('Đã đăng xuất!');
         navigate('/dang-nhap');
+    };
+
+    // Hàm điều hướng tìm kiếm chung
+    const handleSearchSubmit = () => {
+        if (keyword.trim()) {
+            navigate(`/tim-kiem?keyword=${encodeURIComponent(keyword.trim())}`);
+            setShowMobileSearch(false); // Ẩn dropdown mobile sau khi tìm kiếm
+        }
+    };
+
+    const handleMobileKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearchSubmit();
+        }
     };
 
     const navLinks = [
@@ -58,15 +77,38 @@ const Header: React.FC = () => {
 
                 <HeaderNav links={navLinks} />
 
-                {/* Truyền số lượng thực tế xuống Component con để hiển thị */}
+                {/* Truyền thêm các props tìm kiếm xuống HeaderActions */}
                 <HeaderActions
                     user={user}
                     cartCount={actualCartCount}
                     isHovered={isHovered}
                     setIsHovered={setIsHovered}
                     onLogout={handleLogout}
+                    keyword={keyword}
+                    setKeyword={setKeyword}
+                    handleSearchSubmit={handleSearchSubmit}
+                    toggleMobileSearch={() => setShowMobileSearch(!showMobileSearch)}
                 />
             </div>
+
+            {/* Màn hình Mobile: Form tìm kiếm trượt xuống từ Header */}
+            <Collapse in={showMobileSearch} timeout="auto" unmountOnExit>
+                <Box sx={{ px: 2, py: 2, backgroundColor: '#fdfdfd', borderTop: '1px solid #eee', display: { md: 'none' } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#f1f3f4', borderRadius: '20px', padding: '2px 15px' }}>
+                        <InputBase
+                            placeholder="Nhập tên sản phẩm..."
+                            sx={{ flex: 1, fontFamily: 'Quicksand', fontSize: '14px' }}
+                            value={keyword}
+                            onChange={(e) => setKeyword(e.target.value)}
+                            onKeyDown={handleMobileKeyDown}
+                            autoFocus
+                        />
+                        <IconButton size="small" onClick={handleSearchSubmit}>
+                            <Search fontSize="small" />
+                        </IconButton>
+                    </Box>
+                </Box>
+            </Collapse>
 
             <HeaderMobileDrawer
                 open={mobileOpen}

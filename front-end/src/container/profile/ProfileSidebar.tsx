@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 interface ProfileSidebarProps {
-    activeTab: 'info' | 'address';
-    setActiveTab: (tab: 'info' | 'address') => void;
+    activeTab: 'info' | 'address' | 'password';
+    setActiveTab: (tab: 'info' | 'address' | 'password') => void;
 }
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ activeTab, setActiveTab }) => {
@@ -18,6 +18,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ activeTab, setActiveTab
                 </ListItemButton>
                 <ListItemButton selected={activeTab === 'address'} onClick={() => setActiveTab('address')} sx={{ '&.Mui-selected': { backgroundColor: '#fff8e1', borderLeft: '4px solid #ffb300' } }}>
                     <ListItemText primary={<Typography sx={{ fontFamily: 'Quicksand', fontSize: '14px', fontWeight: activeTab === 'address' ? 'bold' : 'normal' }}>Sổ địa chỉ</Typography>} />
+                </ListItemButton>
+                <ListItemButton selected={activeTab === 'password'} onClick={() => setActiveTab('password')} sx={{ '&.Mui-selected': { backgroundColor: '#fff8e1', borderLeft: '4px solid #ffb300' } }}>
+                    <ListItemText primary={<Typography sx={{ fontFamily: 'Quicksand', fontSize: '14px', fontWeight: activeTab === 'password' ? 'bold' : 'normal' }}>Đổi mật khẩu</Typography>} />
                 </ListItemButton>
             </List>
         </Box>

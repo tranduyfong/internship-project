@@ -148,11 +148,36 @@ const setDefaultAddress = async (req, res) => {
     }
 };
 
+const changePassword = async (req, res) => {
+    try {
+        const userId = req.user.userId; // Lấy từ Token
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Vui lòng nhập mật khẩu cũ và mật khẩu mới', 400);
+        }
+
+        if (newPassword.length < 6) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Mật khẩu mới phải có ít nhất 6 ký tự', 400);
+        }
+
+        await userService.changeMyPassword(userId, oldPassword, newPassword);
+
+        return successResponse(res, null, null, 'Đổi mật khẩu thành công');
+    } catch (error) {
+        if (error.message === 'WRONG_OLD_PASSWORD') {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Mật khẩu cũ không chính xác', 400);
+        }
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     search,
     getDetail,
     getMe,
     updateMe,
     addAddress, updateAddress, deleteAddress,
-    setDefaultAddress
+    setDefaultAddress,
+    changePassword
 };

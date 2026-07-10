@@ -22,6 +22,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import ProfilePage from './pages/ProfilePage';
 import ReceiptPage from './pages/ReceiptPage';
 import VNPayReturnPage from './pages/VNPayReturnPage';
+import SearchPage from './pages/SearchPage';
 
 const theme = createTheme({
   typography: { fontFamily: "'Quicksand', sans-serif" },
@@ -53,6 +54,8 @@ const App: React.FC = () => {
 
               <Route path="gio-hang" element={<CartPage />} />
               <Route path="thanh-toan" element={<CheckoutPage />} />
+
+              <Route path="tim-kiem" element={<SearchPage />} />
             </Route>
           </Routes>
         </Router>

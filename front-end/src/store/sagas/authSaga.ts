@@ -49,37 +49,35 @@ function* handleForgotPassword(action: PayloadAction<any>): Generator<any, void,
     }
 }
 
-function* handleVerifyOtp(action: PayloadAction<any>): Generator<any, void, any> {
+function* handleVerifyOtp(action: ReturnType<typeof actions.verifyOtpRequest>): Generator<any, void, any> {
     try {
         yield put(reducers.setAuthLoading(true));
+
+        // Gọi API kiểm tra OTP
         yield call(authService.verifyOtp, action.payload.email, action.payload.otp);
-        toast.success('Xác thực OTP thành công!');
         yield put(reducers.setStep(3));
+
     } catch (error: any) {
-        toast.error(error.message || 'Mã OTP sai hoặc hết hạn!');
-    } {
+        toast.error(error.message || 'Mã OTP không hợp lệ hoặc đã hết hạn');
+    } finally {
         yield put(reducers.setAuthLoading(false));
     }
 }
 
-function* handleResetPassword(action: PayloadAction<any>): Generator<any, void, any> {
+function* handleResetPassword(action: ReturnType<typeof actions.resetPasswordRequest>): Generator<any, void, any> {
     try {
         yield put(reducers.setAuthLoading(true));
 
-        // --- ĐOẠN CODE GIẢ LẬP TẠM THỜI (MOCK API) ---
-        // Tạm thời comment/xóa dòng gọi API thật để không bị lỗi:
-        // const response = yield call(authService.resetPassword, action.payload.email, action.payload.password);
+        // Gọi API reset password
+        yield call(authService.resetPassword, action.payload);
 
-        // Giả lập thời gian chờ server phản hồi là 1.5 giây (1500ms)
-        yield delay(1500);
+        toast.success('Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay bây giờ.');
 
-        // Báo thành công và chuyển thẳng UI về bước 1
-        toast.success('Đổi mật khẩu thành công! (Đang chạy giả lập)');
+        // Trả UI về form gửi email và đá sang trang đăng nhập
         yield put(reducers.setStep(1));
-        // ---------------------------------------------
-
+        window.location.href = '/dang-nhap';
     } catch (error: any) {
-        toast.error(error.message || 'Đặt lại mật khẩu thất bại.');
+        toast.error(error.message || 'Thông tin xác thực không hợp lệ hoặc đã hết hạn');
     } finally {
         yield put(reducers.setAuthLoading(false));
     }

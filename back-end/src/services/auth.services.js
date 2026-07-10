@@ -135,9 +135,26 @@ const verifyResetOtp = async (email, otp) => {
     return true;
 };
 
+const resetPassword = async (email, otp, newPassword) => {
+    // 1. Tái sử dụng lại hàm kiểm tra OTP mà chúng ta đã viết ở bài trước
+    // Hàm này sẽ tự động throw Error nếu OTP sai hoặc hết hạn
+    await verifyResetOtp(email, otp);
+
+    // 2. Mã hóa mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // 3. Cập nhật mật khẩu mới và XÓA token/thời hạn để tránh việc OTP bị dùng lại
+    await db.execute(
+        'UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE email = ?',
+        [hashedPassword, email]
+    );
+};
+
 module.exports = {
     registerUser,
     loginUser,
     requestPasswordReset,
-    verifyResetOtp
+    verifyResetOtp,
+    resetPassword
 };

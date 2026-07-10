@@ -6,3 +6,4 @@ export const addAddressRequest = createAction<any>('user/addAddress');
 export const updateAddressRequest = createAction<{ id: number; data: any }>('user/updateAddress');
 export const deleteAddressRequest = createAction<number>('user/deleteAddress');
 export const setDefaultAddressRequest = createAction<number>('user/setDefaultAddress');
+export const changePasswordRequest = createAction<{ oldPassword: string; newPassword: string; onSuccess: () => void }>('profile/changePasswordRequest');

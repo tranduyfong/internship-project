@@ -1,4 +1,5 @@
 const db = require('../configs/database.config');
+const bcrypt = require('bcryptjs');
 
 const searchUsers = async ({ keyword, pageNumber, pageSize }) => {
     // Ép kiểu chắc chắn thành số nguyên
@@ -193,6 +194,25 @@ const deleteMyAddress = async (userId, addressId) => {
     await db.execute('DELETE FROM user_addresses WHERE id = ? AND user_id = ?', [addressId, userId]);
 };
 
+const changeMyPassword = async (userId, oldPassword, newPassword) => {
+    // 1. Lấy thông tin user (để lấy mật khẩu cũ đã mã hóa)
+    const [users] = await db.execute('SELECT password FROM users WHERE id = ?', [userId]);
+    if (users.length === 0) throw new Error('USER_NOT_FOUND');
+    const user = users[0];
+
+    // 2. So sánh mật khẩu cũ người dùng nhập với mật khẩu trong DB
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+        throw new Error('WRONG_OLD_PASSWORD');
+    }
+
+    // 3. Mã hóa mật khẩu mới và cập nhật
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+};
+
 module.exports = {
     searchUsers,
     getUserById,
@@ -201,5 +221,6 @@ module.exports = {
     addMyAddress,
     setAddressDefault,
     updateMyAddress,
-    deleteMyAddress
+    deleteMyAddress,
+    changeMyPassword
 };

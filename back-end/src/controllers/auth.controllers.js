@@ -82,9 +82,33 @@ const verifyOtpForgotPassword = async (req, res) => {
     }
 };
 
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !otp || !newPassword) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Vui lòng cung cấp đầy đủ email, OTP và mật khẩu mới', 400);
+        }
+
+        if (newPassword.length < 6) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Mật khẩu mới phải có ít nhất 6 ký tự', 400);
+        }
+
+        await authService.resetPassword(email, otp, newPassword);
+
+        return successResponse(res, null, null, 'Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay bây giờ.');
+    } catch (error) {
+        if (error.message === 'USER_NOT_FOUND' || error.message === 'INVALID_OTP' || error.message === 'OTP_EXPIRED') {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thông tin xác thực không hợp lệ hoặc đã hết hạn', 400);
+        }
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     register,
     login,
     forgotPassword,
-    verifyOtpForgotPassword
+    verifyOtpForgotPassword,
+    resetPassword
 };

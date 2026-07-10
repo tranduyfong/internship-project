@@ -10,6 +10,7 @@ router.post('/me/addresses', verifyToken, userController.addAddress);
 router.put('/me/addresses/:addressId/default', verifyToken, userController.setDefaultAddress);
 router.put('/me/addresses/:addressId', verifyToken, userController.updateAddress); // Sửa địa chỉ
 router.delete('/me/addresses/:addressId', verifyToken, userController.deleteAddress); // Xóa địa chỉ
+router.put('/me/password', verifyToken, userController.changePassword);
 
 router.get('/search', verifyToken, verifyAdmin, userController.search);
 

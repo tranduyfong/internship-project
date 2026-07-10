@@ -40,4 +40,6 @@ export const authService = {
 
     // API Xác thực OTP trả về data: null
     verifyOtp: (email: string, otp: string) => apiFetch<null>('/verify-otp-forgot-password', { email, otp }),
+
+    resetPassword: (payload: { email: string; otp: string; newPassword: string }) => apiFetch<null>('/reset-password', payload),
 };

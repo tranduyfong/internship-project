@@ -8,6 +8,7 @@ import ProfileInfoForm from '../container/profile/ProfileInfoForm';
 import AddressList from '../container/profile/AddressList';
 import AddressFormDialog from '../container/profile/AddressFormDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ChangePassword from '../container/profile/ChangePassword';
 
 import {
     fetchProfileRequest, updateProfileRequest, addAddressRequest,
@@ -21,13 +22,11 @@ const ProfilePage: React.FC = () => {
     const { user } = useSelector((state: RootState) => state.auth);
     const { fullProfile } = useSelector((state: RootState) => state.profile);
 
-    const [activeTab, setActiveTab] = useState<'info' | 'address'>('info');
+    // Cập nhật kiểu cho activeTab
+    const [activeTab, setActiveTab] = useState<'info' | 'address' | 'password'>('info');
 
-    // State quản lý Form thêm/sửa
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingAddress, setEditingAddress] = useState<UserAddress | null>(null);
-
-    // State quản lý Xóa
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
 
@@ -89,6 +88,10 @@ const ProfilePage: React.FC = () => {
                             onDelete={confirmDelete}
                         />
                     )}
+                    {/* Render Form đổi mật khẩu khi chọn tab password */}
+                    {activeTab === 'password' && (
+                        <ChangePassword />
+                    )}
                 </div>
             </div>
 
@@ -99,7 +102,6 @@ const ProfilePage: React.FC = () => {
                 initialData={editingAddress}
             />
 
-            {/* Tái sử dụng ConfirmDialog để xác nhận xóa */}
             <ConfirmDialog
                 open={confirmDeleteOpen}
                 title="Xóa địa chỉ"

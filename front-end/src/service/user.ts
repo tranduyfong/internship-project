@@ -34,5 +34,11 @@ export const userService = {
         const res = await fetch(`${BASE_URL}/me/addresses/${addressId}/default`, { method: 'PUT', headers: getHeaders() });
         if (!res.ok) throw new Error('Lỗi đặt mặc định');
         return res.json();
+    },
+    changePassword: async (payload: { oldPassword: string; newPassword: string }) => {
+        const res = await fetch(`${BASE_URL}/me/password`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (!res.ok || data.code !== 'SUCCESS') throw new Error(data.message || 'Lỗi đổi mật khẩu');
+        return data;
     }
 };

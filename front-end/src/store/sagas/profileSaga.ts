@@ -82,6 +82,27 @@ function* handleSetDefaultAddress(action: PayloadAction<number>): Generator<any,
         yield put(reducers.setProfileLoading(false));
     }
 }
+function* handleChangePassword(action: ReturnType<typeof actions.changePasswordRequest>): Generator<any, void, any> {
+    try {
+        yield put(reducers.setChangePasswordLoading(true));
+
+        yield call(userService.changePassword, {
+            oldPassword: action.payload.oldPassword,
+            newPassword: action.payload.newPassword
+        });
+
+        toast.success('Đổi mật khẩu thành công!');
+
+        if (action.payload.onSuccess) {
+            action.payload.onSuccess();
+        }
+
+    } catch (error: any) {
+        toast.error(error.message || 'Mật khẩu cũ không chính xác');
+    } finally {
+        yield put(reducers.setChangePasswordLoading(false));
+    }
+}
 
 export default function* profileSaga() {
     yield takeLatest(actions.fetchProfileRequest.type, handleFetchProfile);
@@ -90,4 +111,5 @@ export default function* profileSaga() {
     yield takeLatest(actions.updateAddressRequest.type, handleUpdateAddress);
     yield takeLatest(actions.deleteAddressRequest.type, handleDeleteAddress);
     yield takeLatest(actions.setDefaultAddressRequest.type, handleSetDefaultAddress);
+    yield takeLatest(actions.changePasswordRequest.type, handleChangePassword);
 }
