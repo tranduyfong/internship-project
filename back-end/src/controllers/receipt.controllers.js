@@ -163,10 +163,24 @@ const vnpayReturn = async (req, res) => {
     }
 };
 
+const getAdminReceiptsList = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const status = req.query.status || null; // Lấy status từ URL nếu có
+
+        const result = await receiptService.getAdminReceipts(status, page, limit);
+        return successResponse(res, result, null, 'Lấy danh sách đơn hàng Admin thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     checkout,
     vnpayIpn,
     getMyReceipts,
     repay,
-    vnpayReturn
+    vnpayReturn,
+    getAdminReceiptsList
 };

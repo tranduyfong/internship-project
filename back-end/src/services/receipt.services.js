@@ -284,11 +284,70 @@ const getOrderDetailsForNotification = async (orderCode) => {
     return orderDetails.length > 0 ? orderDetails[0] : null;
 };
 
+const getAdminReceipts = async (status, page = 1, limit = 10) => {
+    const offset = (page - 1) * limit;
+
+    // Xử lý điều kiện WHERE linh hoạt: Nếu có truyền status thì lọc, không thì lấy tất cả
+    let whereClause = '';
+    let queryParams = [];
+
+    if (status) {
+        whereClause = 'WHERE order_status = ?';
+        queryParams.push(status);
+    }
+
+    // 1. Đếm tổng số lượng để phân trang
+    const [countResult] = await db.execute(
+        `SELECT COUNT(id) as total FROM receipts ${whereClause}`,
+        queryParams
+    );
+    const totalReceipts = countResult[0].total;
+    const totalPage = Math.ceil(totalReceipts / limit);
+
+    // 2. Lấy danh sách đơn hàng
+    // Nhúng trực tiếp limit và offset để tránh lỗi mysqld_stmt_execute
+    const [receipts] = await db.execute(
+        `SELECT * FROM receipts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`,
+        queryParams
+    );
+
+    if (receipts.length === 0) {
+        return { receipts: [], pagination: { total: totalReceipts, totalPage, currentPage: page, limit } };
+    }
+
+    // 3. Kéo chi tiết sản phẩm của các đơn hàng này
+    const receiptIds = receipts.map(r => r.id);
+    const placeholders = receiptIds.map(() => '?').join(',');
+
+    const [items] = await db.execute(
+        `SELECT id, receipt_id, product_id, name_product, img_src, price_at_time, size, quantity 
+         FROM receipt_items WHERE receipt_id IN (${placeholders})`,
+        receiptIds
+    );
+
+    // Gom nhóm items vào receipts
+    const itemsByReceipt = items.reduce((acc, item) => {
+        if (!acc[item.receipt_id]) acc[item.receipt_id] = [];
+        acc[item.receipt_id].push(item);
+        return acc;
+    }, {});
+
+    receipts.forEach(receipt => {
+        receipt.items = itemsByReceipt[receipt.id] || [];
+    });
+
+    return {
+        receipts: receipts,
+        pagination: { total: totalReceipts, totalPage, currentPage: page, limit }
+    };
+};
+
 module.exports = {
     createReceipt,
     restoreInventory,
     updatePaymentSuccess,
     getMyReceipts,
     initiateRepay,
-    getOrderDetailsForNotification
+    getOrderDetailsForNotification,
+    getAdminReceipts
 };

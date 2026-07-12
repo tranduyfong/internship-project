@@ -5,6 +5,7 @@ const productRoutes = require('./product.routes');
 const cartRoutes = require('./cart.routes');
 const addressRoutes = require('./address.routes');
 const receiptRoutes = require('./receipt.routes');
+const analyticRoutes = require('./analytics.routes');
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use('/products', productRoutes);
 router.use('/cart', cartRoutes);
 router.use('/addresses', addressRoutes);
 router.use('/receipts', receiptRoutes);
+router.use('/analytics', analyticRoutes);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const express = require('express');
 const receiptController = require('../controllers/receipt.controllers');
-const { verifyToken } = require('../middlewares/auth.middleware');
+const { verifyToken, verifyAdmin } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
@@ -10,5 +10,6 @@ router.post('/checkout', verifyToken, receiptController.checkout);
 router.post('/:id/repay', verifyToken, receiptController.repay);
 router.get('/vnpay-ipn', receiptController.vnpayIpn);
 router.get('/vnpay-return', receiptController.vnpayReturn);
+router.get('/admin', verifyToken, verifyAdmin, receiptController.getAdminReceiptsList);
 
 module.exports = router;
