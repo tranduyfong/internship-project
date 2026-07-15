@@ -5,6 +5,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { authGuard } from './core/guards/auth.guard';
 import { WarehouseComponent } from './features/warehouse/warehouse.component';
 import { AccountsComponent } from './features/accounts/accounts.component';
+import { PermissionsComponent } from './features/permissions/permissions.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -19,7 +20,8 @@ export const routes: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: DashboardComponent },
             { path: 'warehouse', component: WarehouseComponent },
-            { path: 'accounts', component: AccountsComponent }
+            { path: 'accounts', component: AccountsComponent },
+            { path: 'permissions', component: PermissionsComponent }
         ]
     },
 

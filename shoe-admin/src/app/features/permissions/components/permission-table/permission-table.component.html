@@ -1,0 +1,102 @@
+<div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden transition-all duration-300">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr
+                    class="bg-gray-50 text-gray-400 font-bold text-[11px] uppercase border-b border-gray-100 tracking-wider">
+                    <th class="p-4 pl-6 w-20">ID</th>
+                    <th class="p-4 w-52">Nhân viên</th>
+                    <th class="p-4 w-60">Email</th>
+                    <th class="p-4">Quyền hạn hiện tại</th>
+                    <th class="p-4 text-center pr-6 w-32">Phân quyền</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-100 text-gray-700">
+                @if (isLoading) {
+                @for (item of [1,2,3,4,5,6,7,8,9,10]; track $index) {
+                <tr class="animate-pulse h-[59px]">
+                    <td class="p-4 pl-6">
+                        <div class="h-4 bg-gray-100 rounded-lg w-8"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-200 rounded-lg w-28 mb-1"></div>
+                        <div class="h-3 bg-gray-100 rounded-lg w-20"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-100 rounded-lg w-44"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-100 rounded-lg w-56"></div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="h-8 bg-gray-200 rounded-xl w-10 mx-auto"></div>
+                    </td>
+                </tr>
+                }
+                } @else {
+                @for (user of staffList; track user.id) {
+                <tr class="hover:bg-gray-50/30 transition-colors h-[59px]">
+                    <td class="p-4 pl-6 font-semibold text-gray-400">#{{ user.id }}</td>
+                    <td class="p-4">
+                        <p class="font-bold text-gray-900 leading-tight">{{ user.name }}</p>
+                        <p class="text-[10px] text-gray-400 font-bold mt-0.5">{{ user.phone || 'Không có SĐT' }}</p>
+                    </td>
+                    <td class="p-4 text-gray-500 font-semibold text-xs">{{ user.email }}</td>
+
+                    <td class="p-4">
+                        <div class="flex flex-wrap gap-1.5 max-w-lg">
+                            @for (perm of user.permissions; track perm.id) {
+                            <span
+                                class="px-2 py-0.5 bg-indigo-50/70 text-indigo-600 border border-indigo-100 rounded-md text-[10px] font-bold uppercase"
+                                [title]="perm.description">
+                                {{ perm.code }}
+                            </span>
+                            } @empty {
+                            <span class="text-xs text-gray-400 font-medium italic">Chưa được cấp quyền hạn nào</span>
+                            }
+                        </div>
+                    </td>
+
+                    <td class="p-4 text-center pr-6">
+                        <button (click)="onManage(user)"
+                            class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition duration-150"
+                            title="Điều chỉnh quyền hạn">
+                            Điều chỉnh
+                        </button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="5" class="p-8 text-center h-[590px]">
+                        <div class="flex flex-col items-center justify-center h-full space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-full text-gray-400">
+                                <svg class="w-10 h-10 stroke-[1.5]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800">Không tìm thấy nhân viên nào</p>
+                                <p class="text-xs text-gray-400 mt-1">Hệ thống chưa ghi nhận tài khoản nhân viên vận
+                                    hành (staff) nào khớp từ khóa này.</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                }
+
+                @for (row of getEmptyRowsArray(staffList.length); track $index) {
+                <tr class="h-[59px] hover:bg-transparent">
+                    <td colspan="5" class="p-4 text-transparent select-none">&nbsp;</td>
+                </tr>
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <app-pagination [currentPage]="pagination.currentPage" [totalPage]="pagination.totalPage"
+        [totalItems]="pagination.total" [limit]="10" (pageChange)="onPageChange($event)"></app-pagination>
+</div>

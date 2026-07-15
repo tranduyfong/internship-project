@@ -11,16 +11,59 @@ export class UserService {
 
     // 1. API Tìm kiếm & phân trang người dùng
     searchUsers(keyword: string, pageNumber: number, pageSize: number = 10): Observable<any> {
-        return this.http.get(`${this.baseUrl}/search?keyword=${keyword}&pageNumber=${pageNumber}&pageSize=${pageSize}`);
+        const url = `${this.baseUrl}/search?keyword=${keyword}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        return this.http.get(url);
     }
 
-    // 2. API Cập nhật tài khoản Admin
+    // 2. API Cập nhật thông tin tài khoản (PUT)
     updateUser(id: number, data: { role?: string; name?: string; phone?: string; }): Observable<any> {
-        return this.http.put(`${this.baseUrl}/admin/${id}`, data);
+        // Kiểm tra phòng thủ nếu ID bị truyền sai hoặc undefined
+        if (!id) {
+            console.error('%c[LỖI NGHIÊM TRỌNG]: ID người dùng bị undefined hoặc rỗng!', 'color: red; font-weight: bold;', { id, data });
+        }
+
+        const url = `${this.baseUrl}/admin/${id}`;
+        return this.http.put(url, data);
     }
 
-    // 3. API Khóa / Kích hoạt tài khoản
+    // 3. API Khóa / Mở khóa tài khoản (PATCH)
     updateUserStatus(id: number, status: 'LOCKED' | 'ACTIVE'): Observable<any> {
-        return this.http.patch(`${this.baseUrl}/admin/${id}/status`, { status });
+        if (!id) {
+            console.error('%c[LỖI NGHIÊM TRỌNG]: ID người dùng bị undefined khi cập nhật trạng thái!', 'color: red; font-weight: bold;', { id, status });
+        }
+
+        const url = `${this.baseUrl}/admin/${id}/status`;
+        return this.http.patch(url, { status });
+    }
+
+    // 4. API Lấy danh sách nhân viên
+    getStaff(keyword: string, pageNumber: number, pageSize: number = 10): Observable<any> {
+        const url = `${this.baseUrl}/search?role=staff&keyword=${keyword}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        return this.http.get(url);
+    }
+
+    // 5. API Lấy tất cả quyền hạn
+    getAllPermissions(): Observable<any> {
+        const url = `${this.baseUrl}/admin/permissions`;
+        return this.http.get(url);
+    }
+
+    // 6. API Lấy chi tiết quyền của nhân viên
+    getUserPermissions(userId: number): Observable<any> {
+        if (!userId) {
+            console.error('getUserPermissions Error: userId is missing!');
+        }
+        const url = `${this.baseUrl}/admin/${userId}/permissions`;
+        return this.http.get(url);
+    }
+
+    // 7. API Cập nhật danh sách quyền hạn cho nhân viên (PATCH)
+    updateUserPermissions(userId: number, permissionIds: number[]): Observable<any> {
+        if (!userId) {
+            console.error('%c[LỖI NGHIÊM TRỌNG]: userId bị undefined khi cập nhật quyền hạn!', 'color: red; font-weight: bold;', { userId, permissionIds });
+        }
+
+        const url = `${this.baseUrl}/admin/${userId}/permissions`;
+        return this.http.put(url, { permissionIds });
     }
 }
