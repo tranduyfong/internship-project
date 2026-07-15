@@ -7,6 +7,7 @@ const addressRoutes = require('./address.routes');
 const receiptRoutes = require('./receipt.routes');
 const analyticRoutes = require('./analytics.routes');
 const inventoryRoutes = require('./inventory.routes');
+const chatRoutes = require('./chat.routes');
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use('/addresses', addressRoutes);
 router.use('/receipts', receiptRoutes);
 router.use('/analytics', analyticRoutes);
 router.use('/inventory', inventoryRoutes);
+router.use('/chat', chatRoutes);
 
 module.exports = router;
