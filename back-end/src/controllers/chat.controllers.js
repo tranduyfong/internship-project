@@ -48,8 +48,22 @@ const markAsRead = async (req, res) => {
     }
 };
 
+const getUnreadBadge = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const role = req.user.role.toUpperCase();
+
+        const count = await chatService.getUnreadCount(userId, role);
+
+        return successResponse(res, { unreadCount: count }, null, 'Lấy số tin nhắn chưa đọc thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     getRoomList,
     getMessageHistory,
-    markAsRead
+    markAsRead,
+    getUnreadBadge
 };

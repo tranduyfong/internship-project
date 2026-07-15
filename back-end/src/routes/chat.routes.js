@@ -15,4 +15,6 @@ router.get('/rooms/:roomId/messages', verifyToken, chatController.getMessageHist
 // Đánh dấu đã đọc
 router.patch('/rooms/:roomId/read', verifyToken, chatController.markAsRead);
 
+router.get('/unread-count', verifyToken, chatController.getUnreadBadge);
+
 module.exports = router;

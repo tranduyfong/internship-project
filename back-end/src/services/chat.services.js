@@ -88,10 +88,32 @@ const saveMessage = async (roomId, senderId, senderType, message) => {
     }
 };
 
+const getUnreadCount = async (userId, role) => {
+    if (role === 'ADMIN' || role === 'STAFF') {
+        // Với nhân viên: Đếm tất cả tin nhắn chưa đọc do khách hàng gửi
+        const [result] = await db.execute(`
+            SELECT COUNT(id) as total_unread
+            FROM chat_messages
+            WHERE is_read = FALSE AND sender_type = 'CUSTOMER'
+        `);
+        return result[0].total_unread;
+    } else {
+        // Với khách hàng: Chỉ đếm tin nhắn do nhân viên gửi trong phòng của mình
+        const roomId = await getOrCreateRoom(userId);
+        const [result] = await db.execute(`
+            SELECT COUNT(id) as total_unread
+            FROM chat_messages
+            WHERE is_read = FALSE AND sender_type = 'STAFF' AND room_id = ?
+        `, [roomId]);
+        return result[0].total_unread;
+    }
+};
+
 module.exports = {
     getOrCreateRoom,
     getRoomsForStaff,
     getMessages,
     markMessagesAsRead,
-    saveMessage
+    saveMessage,
+    getUnreadCount
 };
