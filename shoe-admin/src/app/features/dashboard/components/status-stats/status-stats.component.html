@@ -1,0 +1,30 @@
+<div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+    <h3 class="text-sm font-bold text-gray-800">Thống kê trạng thái đơn hàng (Bấm thẻ để xem chi tiết bên dưới)</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div (click)="onSelect('pending')"
+            class="p-4 rounded-xl cursor-pointer transition-all border text-center hover:scale-[1.02] bg-amber-50/50 border-amber-100 hover:bg-amber-50">
+            <p class="text-xs font-semibold text-amber-600">Chờ thanh toán</p>
+            <p class="text-2xl font-bold text-amber-800 mt-1">{{ statusStats?.pending || 0 }}</p>
+        </div>
+        <div (click)="onSelect('processing')"
+            class="p-4 rounded-xl cursor-pointer transition-all border text-center hover:scale-[1.02] bg-blue-50/50 border-blue-100 hover:bg-blue-50">
+            <p class="text-xs font-semibold text-blue-600">Đang xử lý</p>
+            <p class="text-2xl font-bold text-blue-800 mt-1">{{ statusStats?.processing || 0 }}</p>
+        </div>
+        <div (click)="onSelect('shipped')"
+            class="p-4 rounded-xl cursor-pointer transition-all border text-center hover:scale-[1.02] bg-indigo-50/50 border-indigo-100 hover:bg-indigo-50">
+            <p class="text-xs font-semibold text-indigo-600">Đang giao hàng</p>
+            <p class="text-2xl font-bold text-indigo-800 mt-1">{{ statusStats?.shipped || 0 }}</p>
+        </div>
+        <div (click)="onSelect('delivered')"
+            class="p-4 rounded-xl cursor-pointer transition-all border text-center hover:scale-[1.02] bg-green-50/50 border-green-100 hover:bg-green-50">
+            <p class="text-xs font-semibold text-green-600">Đã giao hàng</p>
+            <p class="text-2xl font-bold text-green-800 mt-1">{{ statusStats?.delivered || 0 }}</p>
+        </div>
+        <div (click)="onSelect('cancelled')"
+            class="p-4 rounded-xl cursor-pointer transition-all border text-center hover:scale-[1.02] bg-red-50/50 border-red-100 hover:bg-red-50">
+            <p class="text-xs font-semibold text-red-600">Đã hủy đơn</p>
+            <p class="text-2xl font-bold text-red-800 mt-1">{{ statusStats?.cancelled || 0 }}</p>
+        </div>
+    </div>
+</div>

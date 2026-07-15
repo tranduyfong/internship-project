@@ -1,0 +1,94 @@
+<div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden transition-all duration-300">
+    <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+        <h3 class="text-sm font-bold text-gray-800">
+            Chi tiết danh sách: <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ml-2"
+                [ngClass]="getStatusColorClass(selectedStatus)">{{ getVietnameseStatus(selectedStatus) }}</span>
+        </h3>
+        <button (click)="onClose()" class="text-xs text-gray-400 hover:text-gray-600 font-medium">Đóng bảng ×</button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-gray-400 font-bold text-xs uppercase border-b border-gray-100">
+                    <th class="p-4">Mã đơn</th>
+                    <th class="p-4">Khách hàng</th>
+                    <th class="p-4">Sản phẩm mua</th>
+                    <th class="p-4 text-right">Tổng tiền</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-gray-700">
+                @if (isDetailLoading) {
+                @for (item of [1,2,3,4,5]; track $index) {
+                <tr class="animate-pulse h-[73px]">
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-200 rounded-lg w-20"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-200 rounded-lg w-36 mb-1.5"></div>
+                        <div class="h-3.5 bg-gray-100 rounded-lg w-24"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-200 rounded-lg w-52"></div>
+                    </td>
+                    <td class="p-4 text-right">
+                        <div class="h-4 bg-gray-200 rounded-lg w-24 ml-auto"></div>
+                    </td>
+                </tr>
+                }
+                } @else {
+                @for (receipt of detailReceipts; track receipt.id) {
+                <tr class="hover:bg-gray-50/50 transition-colors h-[73px]">
+                    <td class="p-4 font-bold text-indigo-600">{{ receipt.order_code }}</td>
+                    <td class="p-4">
+                        <p class="font-semibold text-gray-900">{{ receipt.shipping_full_name }}</p>
+                        <p class="text-xs text-gray-400">{{ receipt.shipping_phone }}</p>
+                    </td>
+                    <td class="p-4 max-w-xs">
+                        @for (item of receipt.items; track item.id) {
+                        <div class="flex items-center gap-2 mb-1 last:mb-0">
+                            <span
+                                class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md font-mono font-bold">x{{
+                                item.quantity }}</span>
+                            <span class="truncate block text-xs font-semibold text-gray-700"
+                                [title]="item.name_product">{{ item.name_product }}</span>
+                        </div>
+                        }
+                    </td>
+                    <td class="p-4 text-right font-bold text-gray-900">{{ +receipt.total_amount | number }} đ</td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="4" class="p-8 text-center h-[365px]">
+                        <div class="flex flex-col items-center justify-center h-full space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-full text-gray-400">
+                                <svg class="w-10 h-10 stroke-[1.5]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m16.5 0a1.5 1.5 0 00-1.5-1.5H18.75V3.75a.75.75 0 00-.75-.75h-12a.75.75 0 00-.75.75V6H5.25a1.5 1.5 0 00-1.5 1.5m16.5 0v2.25H3.75V7.5">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800">Không tìm thấy đơn hàng nào</p>
+                                <p class="text-xs text-gray-400 mt-1">Chưa phát sinh bất kỳ đơn hàng nào thuộc tiến
+                                    trình này trong khoảng thời gian được lọc.</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                }
+
+                @for (row of getEmptyRowsArray(detailReceipts.length); track $index) {
+                <tr class="h-[73px] hover:bg-transparent">
+                    <td colspan="4" class="p-4 text-transparent select-none">&nbsp;</td>
+                </tr>
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <app-pagination [currentPage]="pagination.currentPage" [totalPage]="pagination.totalPage"
+        [totalItems]="pagination.total" (pageChange)="onPageChange($event)"></app-pagination>
+</div>

@@ -25,7 +25,7 @@ export class AnalyticsService {
         return this.http.get(`${this.baseUrl}/analytics/order-status?startDate=${startDate}&endDate=${endDate}`);
     }
 
-    getReceiptsByStatus(status: string, page: number = 1, limit: number = 5): Observable<any> {
-        return this.http.get(`${this.baseUrl}/receipts/admin?status=${status}&page=${page}&limit=${limit}`);
+    getReceiptsByStatus(status: string, startDate: string, endDate: string, page: number = 1, limit: number = 5): Observable<any> {
+        return this.http.get(`${this.baseUrl}/receipts/admin?status=${status}&startDate=${startDate}&endDate=${endDate}&page=${page}&limit=${limit}`);
     }
 }

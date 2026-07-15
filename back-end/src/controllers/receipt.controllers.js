@@ -167,9 +167,21 @@ const getAdminReceiptsList = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const status = req.query.status || null; // Lấy status từ URL nếu có
 
-        const result = await receiptService.getAdminReceipts(status, page, limit);
+        // Lấy các bộ lọc từ URL
+        const status = req.query.status || null;
+        let startDate = req.query.startDate || null;
+        let endDate = req.query.endDate || null;
+
+        // Nếu có truyền ngày, tự động gắn thêm giờ để lấy trọn vẹn trong ngày đó
+        if (startDate && endDate) {
+            startDate = `${startDate} 00:00:00`;
+            endDate = `${endDate} 23:59:59`;
+        }
+
+        // Truyền thêm startDate và endDate vào Service
+        const result = await receiptService.getAdminReceipts(status, startDate, endDate, page, limit);
+
         return successResponse(res, result, null, 'Lấy danh sách đơn hàng Admin thành công');
     } catch (error) {
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);

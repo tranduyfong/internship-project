@@ -284,17 +284,27 @@ const getOrderDetailsForNotification = async (orderCode) => {
     return orderDetails.length > 0 ? orderDetails[0] : null;
 };
 
-const getAdminReceipts = async (status, page = 1, limit = 10) => {
+const getAdminReceipts = async (status, startDate, endDate, page = 1, limit = 10) => {
     const offset = (page - 1) * limit;
 
-    // Xử lý điều kiện WHERE linh hoạt: Nếu có truyền status thì lọc, không thì lấy tất cả
-    let whereClause = '';
+    // Mảng chứa các điều kiện lọc
+    let conditions = [];
     let queryParams = [];
 
+    // Nếu có truyền status thì thêm vào mảng điều kiện
     if (status) {
-        whereClause = 'WHERE order_status = ?';
+        conditions.push('order_status = ?');
         queryParams.push(status);
     }
+
+    // Nếu có truyền khoảng ngày thì thêm vào mảng điều kiện
+    if (startDate && endDate) {
+        conditions.push('created_at >= ? AND created_at <= ?');
+        queryParams.push(startDate, endDate);
+    }
+
+    // Nối các điều kiện lại với nhau bằng chữ AND (nếu có)
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // 1. Đếm tổng số lượng để phân trang
     const [countResult] = await db.execute(
@@ -305,7 +315,6 @@ const getAdminReceipts = async (status, page = 1, limit = 10) => {
     const totalPage = Math.ceil(totalReceipts / limit);
 
     // 2. Lấy danh sách đơn hàng
-    // Nhúng trực tiếp limit và offset để tránh lỗi mysqld_stmt_execute
     const [receipts] = await db.execute(
         `SELECT * FROM receipts ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`,
         queryParams
