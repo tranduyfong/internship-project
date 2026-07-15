@@ -1,0 +1,79 @@
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs flex flex-col justify-between min-h-[280px]">
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">Tình trạng tồn kho theo hãng</h3>
+                <span
+                    class="text-[11px] font-bold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full border border-amber-100">
+                    Tổng kho: {{ overviewData?.overview?.totalStock || 0 }} đôi
+                </span>
+            </div>
+
+            @if (isLoading) {
+            <div class="space-y-4">
+                <div class="h-3 bg-gray-100 rounded animate-pulse"></div>
+                <div class="h-3 bg-gray-100 rounded animate-pulse"></div>
+                <div class="h-3 bg-gray-100 rounded animate-pulse"></div>
+            </div>
+            } @else {
+            <div class="space-y-4">
+                @for (item of overviewData?.byBrand?.stock; track item.brand) {
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1 text-gray-600">
+                        <span>{{ item.brand }}</span>
+                        <span>{{ item.total_stock }} đôi ({{ getPercentage(item.total_stock,
+                            overviewData?.overview?.totalStock) }}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-amber-500 h-full rounded-full transition-all duration-500"
+                            [style.width.%]="getPercentage(item.total_stock, overviewData?.overview?.totalStock)">
+                        </div>
+                    </div>
+                </div>
+                } @empty {
+                <div class="text-center py-6 text-xs text-gray-400">Không có dữ liệu tồn kho</div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs flex flex-col justify-between min-h-[280px]">
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">Sản lượng đã bán ra</h3>
+                <span
+                    class="text-[11px] font-bold bg-green-50 text-green-600 px-2.5 py-0.5 rounded-full border border-green-100">
+                    Đã bán: {{ overviewData?.overview?.totalSold || 0 }} đôi
+                </span>
+            </div>
+
+            @if (isLoading) {
+            <div class="space-y-4">
+                <div class="h-3 bg-gray-100 rounded animate-pulse"></div>
+                <div class="h-3 bg-gray-100 rounded animate-pulse"></div>
+                <div class="h-3 bg-gray-100 rounded animate-pulse"></div>
+            </div>
+            } @else {
+            <div class="space-y-4">
+                @for (item of overviewData?.byBrand?.sold; track item.brand) {
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1 text-gray-600">
+                        <span>{{ item.brand }}</span>
+                        <span>{{ item.total_sold }} đôi ({{ getPercentage(item.total_sold,
+                            overviewData?.overview?.totalSold) }}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                            [style.width.%]="getPercentage(item.total_sold, overviewData?.overview?.totalSold)">
+                        </div>
+                    </div>
+                </div>
+                } @empty {
+                <div class="text-center py-6 text-xs text-gray-400">Chưa bán ra sản phẩm nào</div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+</div>

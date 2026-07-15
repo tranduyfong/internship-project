@@ -1,0 +1,18 @@
+<div class="space-y-6">
+    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Quản lý kho hàng & Hiệu quả kinh doanh</h1>
+        <p class="text-sm text-gray-500 mt-0.5">Theo dõi chi tiết số liệu xuất nhập kho, phân tích thực tế lợi nhuận và
+            thị phần hãng</p>
+    </div>
+
+    <app-overview-stats [overviewData]="overviewData" [isLoading]="isOverviewLoading">
+    </app-overview-stats>
+
+    <app-profit-report [profitData]="profitData" [isLoading]="isProfitLoading"
+        (filterChange)="handleProfitFilterChange($event)">
+    </app-profit-report>
+
+    <app-brand-comparison [compareData]="compareData" [isLoading]="isCompareLoading" [month1]="month1" [month2]="month2"
+        (monthChange)="handleMonthSelectionChange($event)">
+    </app-brand-comparison>
+</div>

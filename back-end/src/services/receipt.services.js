@@ -17,7 +17,6 @@ const createReceipt = async (userId, data) => {
 
         // 1. KIỂM TRA VÀ TRỪ TỒN KHO AN TOÀN (Pessimistic Locking)
         for (const item of checkoutItems) {
-            // Dùng FOR UPDATE để khóa dòng dữ liệu size này lại, ngăn người khác can thiệp
             const [stockData] = await connection.execute(
                 'SELECT quantity FROM product_sizes WHERE product_id = ? AND size = ? FOR UPDATE',
                 [item.id, item.size]
@@ -55,16 +54,24 @@ const createReceipt = async (userId, data) => {
         );
         const receiptId = receiptResult.insertId;
 
-        // 4. LƯU VÀO BẢNG RECEIPT_ITEMS (Chi tiết đơn hàng)
-        const receiptItemsData = checkoutItems.map(item => [
-            receiptId, item.id, item.name, item.cover_image || null,
-            item.price, item.size, item.quantity
-        ]);
-
-        await connection.query(
-            'INSERT INTO receipt_items (receipt_id, product_id, name_product, img_src, price_at_time, size, quantity) VALUES ?',
-            [receiptItemsData]
-        );
+        // 4. LƯU VÀO BẢNG RECEIPT_ITEMS (Dùng vòng lặp an toàn và móc giá import_price từ bảng products)
+        for (const item of checkoutItems) {
+            await connection.execute(
+                `INSERT INTO receipt_items 
+                (receipt_id, product_id, size, quantity, price_at_time, import_price_at_time, name_product, img_src) 
+                VALUES (?, ?, ?, ?, ?, (SELECT import_price FROM products WHERE id = ?), ?, ?)`,
+                [
+                    receiptId,
+                    item.id,
+                    item.size,
+                    item.quantity,
+                    item.price,
+                    item.id,
+                    item.name,
+                    item.cover_image || null
+                ]
+            );
+        }
 
         // 5. NẾU LÀ ĐƠN HÀNG THÀNH CÔNG -> XÓA CÁC SẢN PHẨM ĐÓ KHỎI GIỎ HÀNG
         const productIdsToRemove = checkoutItems.map(i => i.id);

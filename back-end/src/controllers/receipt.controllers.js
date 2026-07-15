@@ -20,13 +20,15 @@ const checkout = async (req, res) => {
                 ipAddr = '127.0.0.1';
             }
 
+            const vnpTxnRef = `${orderData.orderCode}_${Date.now()}`;
+
             const vnpUrl = vnpayInstance.buildPaymentUrl({
                 vnp_Amount: orderData.totalAmount,
                 vnp_IpAddr: ipAddr,
                 vnp_ReturnUrl: process.env.VNP_RETURN_URL,
-                vnp_TxnRef: orderData.orderCode,
+                vnp_TxnRef: vnpTxnRef,
                 vnp_OrderInfo: `Thanh toan don hang ${orderData.orderCode}`,
-                vnp_OrderType: ProductCode.Other // Dùng chuẩn Enum thay vì truyền string cứng
+                vnp_OrderType: ProductCode.Other
             });
 
             return successResponse(res, {

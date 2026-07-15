@@ -3,25 +3,23 @@ const { successResponse, errorResponse } = require('../utils/response.util');
 
 const create = async (req, res) => {
     try {
-        const { name_product, price_product, descript_product, brand } = req.body;
+        const { name_product, price_product, importPrice, descript_product, brand } = req.body;
         let sizes = [];
 
-        // Kiểm tra và dịch ngược chuỗi sizes từ form-data thành mảng
         if (req.body.sizes) {
             try {
                 sizes = JSON.parse(req.body.sizes);
             } catch (e) {
-                return errorResponse(res, 'VALIDATION_FAILED', 'Định dạng sizes không hợp lệ (Phải là JSON string)', 400);
+                return errorResponse(res, 'VALIDATION_FAILED', 'Định dạng sizes không hợp lệ', 400);
             }
         }
 
-        if (!name_product || !price_product) {
-            return errorResponse(res, 'VALIDATION_FAILED', 'Tên và giá sản phẩm là bắt buộc', 400);
+        if (!name_product || !price_product || !importPrice) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Tên, giá bán và giá nhập là bắt buộc', 400);
         }
 
-        // Truyền thêm sizes vào service
         const productId = await productService.createProduct(
-            { name_product, price_product, descript_product, brand, sizes },
+            { name_product, price_product, importPrice, descript_product, brand, sizes },
             req.files
         );
 

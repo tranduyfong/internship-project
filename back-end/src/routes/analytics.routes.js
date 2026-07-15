@@ -11,5 +11,8 @@ router.get('/revenue', analyticsController.getRevenue);
 router.get('/products', analyticsController.getProductSales);
 router.get('/customers', analyticsController.getTopCustomers);
 router.get('/order-status', analyticsController.getOrderStatus);
+router.get('/profit', analyticsController.getProfit);
+router.get('/compare-brands', analyticsController.getCompareBrands);
+router.get('/overview-stats', analyticsController.getInventoryAndSales);
 
 module.exports = router;

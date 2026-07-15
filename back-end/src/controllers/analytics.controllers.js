@@ -77,9 +77,47 @@ const getOrderStatus = async (req, res) => {
     }
 };
 
+const getProfit = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        if (!startDate || !endDate) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Vui lòng cung cấp khoảng ngày', 400);
+        }
+        const data = await analyticsService.getProfitReport(`${startDate} 00:00:00`, `${endDate} 23:59:59`);
+        return successResponse(res, data, null, 'Lấy báo cáo lợi nhuận thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const getCompareBrands = async (req, res) => {
+    try {
+        const { month1, month2 } = req.query; // Nhận dạng '2026-06' và '2026-07'
+        if (!month1 || !month2) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Vui lòng cung cấp 2 tháng cần so sánh', 400);
+        }
+        const data = await analyticsService.compareBrandsBetweenMonths(month1, month2);
+        return successResponse(res, data, null, 'So sánh doanh số hãng thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const getInventoryAndSales = async (req, res) => {
+    try {
+        const data = await analyticsService.getInventoryAndSalesStats();
+        return successResponse(res, data, null, 'Lấy thống kê kho và bán hàng thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     getRevenue,
     getProductSales,
     getTopCustomers,
-    getOrderStatus
+    getOrderStatus,
+    getProfit,
+    getCompareBrands,
+    getInventoryAndSales
 };

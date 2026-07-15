@@ -1,22 +1,19 @@
 const db = require('../configs/database.config');
 
 const createProduct = async (data, files) => {
-    // Nhận thêm sizes từ data
-    const { name_product, price_product, descript_product, brand, sizes } = data;
+    const { name_product, price_product, importPrice, descript_product, brand, sizes } = data;
 
     const connection = await db.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        // 1. Thêm vào bảng products
         const [productResult] = await connection.execute(
-            'INSERT INTO products (name_product, price_product, descript_product, brand) VALUES (?, ?, ?, ?)',
-            [name_product, price_product, descript_product, brand]
+            'INSERT INTO products (name_product, price_product, import_price, descript_product, brand) VALUES (?, ?, ?, ?, ?)',
+            [name_product, price_product, importPrice, descript_product, brand]
         );
         const productId = productResult.insertId;
 
-        // 2. Thêm vào bảng product_images (nếu có ảnh)
         if (files && files.length > 0) {
             const imageValues = files.map(file => [
                 productId,
@@ -29,7 +26,6 @@ const createProduct = async (data, files) => {
             );
         }
 
-        // 3. Thêm vào bảng product_sizes (MỚI THÊM)
         if (sizes && sizes.length > 0) {
             const sizeValues = sizes.map(item => [
                 productId,
@@ -41,6 +37,23 @@ const createProduct = async (data, files) => {
                 'INSERT INTO product_sizes (product_id, size, quantity) VALUES ?',
                 [sizeValues]
             );
+
+            const logValues = sizes
+                .filter(item => (item.quantity || 0) > 0)
+                .map(item => [
+                    productId,
+                    item.size,
+                    item.quantity,
+                    importPrice,
+                    'Nhập kho sản phẩm mới'
+                ]);
+
+            if (logValues.length > 0) {
+                await connection.query(
+                    'INSERT INTO inventory_logs (product_id, size, quantity_added, import_price, reason) VALUES ?',
+                    [logValues]
+                );
+            }
         }
 
         await connection.commit();
@@ -60,21 +73,17 @@ const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNum
     let whereClauses = [];
     let queryParams = [];
 
-    // 1. Lọc theo Keyword (Tên hoặc Hãng)
     if (keyword) {
         whereClauses.push('(p.name_product LIKE ? OR p.brand LIKE ?)');
         queryParams.push(`%${keyword}%`, `%${keyword}%`);
     }
 
-    // 2. Lọc theo Thương hiệu (Brands)
     if (brands && brands.length > 0) {
-        // Tạo chuỗi ?, ?, ? tương ứng với số lượng brand
         const placeholders = brands.map(() => '?').join(',');
         whereClauses.push(`p.brand IN (${placeholders})`);
         queryParams.push(...brands);
     }
 
-    // 3. Lọc theo Khoảng giá (Price)
     if (minPrice !== null && minPrice !== undefined) {
         whereClauses.push('p.price_product >= ?');
         queryParams.push(minPrice);
@@ -84,31 +93,25 @@ const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNum
         queryParams.push(maxPrice);
     }
 
-    // 4. Lọc theo Kích thước (Sizes)
     if (sizes && sizes.length > 0) {
         const placeholders = sizes.map(() => '?').join(',');
-        // Sử dụng EXISTS để tìm sản phẩm có size đó mà không làm lặp dữ liệu (tránh JOIN)
         whereClauses.push(`EXISTS (SELECT 1 FROM product_sizes ps WHERE ps.product_id = p.id AND ps.size IN (${placeholders}))`);
         queryParams.push(...sizes);
     }
 
-    // Ghép các điều kiện WHERE lại với nhau
     let whereString = '';
     if (whereClauses.length > 0) {
         whereString = ' WHERE ' + whereClauses.join(' AND ');
     }
 
-    // Ráp vào câu truy vấn chính
     let countQuery = 'SELECT COUNT(p.id) as total FROM products p' + whereString;
     let dataQuery = 'SELECT p.* FROM products p' + whereString + ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
-    // --- THỰC THI TRUY VẤN ---
     const [countResult] = await db.execute(countQuery, queryParams);
     const totalElements = countResult[0].total;
 
     const [products] = await db.execute(dataQuery, queryParams);
 
-    // Xử lý lấy sizes và ảnh (GIỮ NGUYÊN NHƯ BƯỚC TRƯỚC BẠN ĐÃ LÀM)
     if (products.length > 0) {
         const productIds = products.map(p => p.id);
         const placeholders = productIds.map(() => '?').join(',');
@@ -159,7 +162,6 @@ const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNum
 };
 
 const getProductById = async (productId) => {
-    // 1. Lấy thông tin cơ bản của sản phẩm
     const [products] = await db.execute('SELECT * FROM products WHERE id = ?', [productId]);
 
     if (products.length === 0) {
@@ -167,14 +169,12 @@ const getProductById = async (productId) => {
     }
     const product = products[0];
 
-    // 2. Lấy toàn bộ hình ảnh của sản phẩm
     const [images] = await db.execute(
         'SELECT id, image_url FROM product_images WHERE product_id = ?',
         [productId]
     );
-    product.images = images; // Mảng các object ảnh
+    product.images = images;
 
-    // 3. Lấy toàn bộ size và số lượng
     const [sizes] = await db.execute(
         'SELECT id, size, quantity FROM product_sizes WHERE product_id = ?',
         [productId]
