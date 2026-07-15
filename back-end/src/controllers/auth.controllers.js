@@ -15,7 +15,7 @@ const register = async (req, res) => {
         return successResponse(res, result, null, 'User registered successfully', 201);
     } catch (error) {
         if (error.message === 'USER_ALREADY_EXISTS') {
-            return errorResponse(res, 'USER_ALREADY_EXISTS', 'User already exists', 400);
+            return errorResponse(res, 'USER_ALREADY_EXISTS', 'Tên người dùng đã tồn tại', 400);
         }
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Something went wrong', 500, null, error.message);
     }
@@ -25,16 +25,12 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return errorResponse(res, 'VALIDATION_FAILED', 'Email and password are required', 400);
-        }
-
         const result = await authService.loginUser(email, password);
 
-        return successResponse(res, result, null, 'Login successful', 200);
+        return successResponse(res, result, null, 'Đăng nhập thành công!', 200);
     } catch (error) {
         if (error.message === 'INVALID_CREDENTIALS') {
-            return errorResponse(res, 'INVALID_CREDENTIALS', 'Invalid email or password', 400);
+            return errorResponse(res, 'INVALID_CREDENTIALS', 'Email hoặc mật khẩu không đúng!', 400);
         }
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Something went wrong', 500, null, error.message);
     }

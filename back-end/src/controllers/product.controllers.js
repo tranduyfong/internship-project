@@ -88,8 +88,73 @@ const getDetail = async (req, res) => {
     }
 };
 
+const editProduct = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const { name_product, price_product, importPrice, descript_product, brand } = req.body;
+
+        if (!productId) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID sản phẩm', 400);
+        }
+
+        await productService.updateProduct(productId, {
+            name_product, price_product, importPrice, descript_product, brand
+        });
+
+        return successResponse(res, null, null, 'Cập nhật sản phẩm thành công');
+    } catch (error) {
+        if (error.message === 'NO_DATA_TO_UPDATE') {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Không có dữ liệu cập nhật', 400);
+        }
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const changeStatus = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const { status } = req.body; // Bắt buộc là 'SELLING' hoặc 'STOPPED'
+
+        if (!productId || !status) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID hoặc trạng thái sản phẩm', 400);
+        }
+
+        await productService.toggleProductStatus(productId, status);
+
+        return successResponse(
+            res, null, null,
+            status === 'STOPPED' ? 'Đã ngưng bán sản phẩm' : 'Đã mở bán lại sản phẩm'
+        );
+    } catch (error) {
+        if (error.message === 'INVALID_STATUS') {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Trạng thái chỉ được là SELLING hoặc STOPPED', 400);
+        }
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const getAdminList = async (req, res) => {
+    try {
+        const keyword = req.query.keyword || '';
+        const pageNumber = req.query.pageNumber !== undefined && req.query.pageNumber !== '' ? parseInt(req.query.pageNumber, 10) : 0;
+        const pageSize = req.query.pageSize !== undefined && req.query.pageSize !== '' ? parseInt(req.query.pageSize, 10) : 20;
+
+        if (pageNumber < 0 || pageSize <= 0) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Tham số phân trang không hợp lệ', 400);
+        }
+
+        const result = await productService.getAdminProducts({ keyword, pageNumber, pageSize });
+        return successResponse(res, result.data, result.pagination, 'Lấy danh sách Admin thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     create,
     getList,
-    getDetail
+    getDetail,
+    editProduct,
+    changeStatus,
+    getAdminList
 };

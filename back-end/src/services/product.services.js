@@ -70,8 +70,12 @@ const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNum
     const limit = parseInt(pageSize, 10);
     const offset = parseInt(pageNumber, 10) * limit;
 
+    //p.status = 'SELLING'
     let whereClauses = [];
     let queryParams = [];
+
+    // Hiển thị sản phẩm trạng thái đang bán
+    whereClauses.push("p.status = 'SELLING'");
 
     if (keyword) {
         whereClauses.push('(p.name_product LIKE ? OR p.brand LIKE ?)');
@@ -184,8 +188,93 @@ const getProductById = async (productId) => {
     return product;
 };
 
+const updateProduct = async (productId, updateData) => {
+    const { name_product, price_product, importPrice, descript_product, brand } = updateData;
+
+    let updateFields = [];
+    let queryParams = [];
+
+    if (name_product) { updateFields.push('name_product = ?'); queryParams.push(name_product); }
+    if (price_product) { updateFields.push('price_product = ?'); queryParams.push(price_product); }
+    if (importPrice) { updateFields.push('import_price = ?'); queryParams.push(importPrice); }
+    if (descript_product) { updateFields.push('descript_product = ?'); queryParams.push(descript_product); }
+    if (brand) { updateFields.push('brand = ?'); queryParams.push(brand); }
+
+    if (updateFields.length === 0) throw new Error('NO_DATA_TO_UPDATE');
+
+    const updateQuery = `UPDATE products SET ${updateFields.join(', ')} WHERE id = ?`;
+    queryParams.push(productId);
+
+    await db.execute(updateQuery, queryParams);
+};
+
+// 2. Chuyển trạng thái sản phẩm (Đang bán -> Ngưng bán và ngược lại)
+const toggleProductStatus = async (productId, status) => {
+    if (status !== 'SELLING' && status !== 'STOPPED') {
+        throw new Error('INVALID_STATUS');
+    }
+
+    await db.execute('UPDATE products SET status = ? WHERE id = ?', [status, productId]);
+};
+
+// Thêm hàm này vào gần cuối file
+const getAdminProducts = async ({ keyword, pageNumber, pageSize }) => {
+    const limit = parseInt(pageSize, 10);
+    const offset = parseInt(pageNumber, 10) * limit;
+
+    let whereClause = '';
+    let queryParams = [];
+
+    if (keyword) {
+        whereClause = 'WHERE p.name_product LIKE ? OR p.brand LIKE ?';
+        queryParams.push(`%${keyword}%`, `%${keyword}%`);
+    }
+
+    let countQuery = `SELECT COUNT(p.id) as total FROM products p ${whereClause}`;
+    let dataQuery = `SELECT p.* FROM products p ${whereClause} ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+    const [countResult] = await db.execute(countQuery, queryParams);
+    const totalElements = countResult[0].total;
+
+    const [products] = await db.execute(dataQuery, queryParams);
+
+    // Vẫn lấy ảnh bìa để Admin xem cho trực quan
+    if (products.length > 0) {
+        const productIds = products.map(p => p.id);
+        const placeholders = productIds.map(() => '?').join(',');
+
+        const [images] = await db.execute(
+            `SELECT product_id, image_url FROM product_images WHERE product_id IN (${placeholders})`,
+            productIds
+        );
+        const imagesByProduct = images.reduce((acc, currentImg) => {
+            if (!acc[currentImg.product_id]) acc[currentImg.product_id] = [];
+            acc[currentImg.product_id].push(currentImg.image_url);
+            return acc;
+        }, {});
+
+        products.forEach(p => {
+            const allImages = imagesByProduct[p.id] || [];
+            p.cover_image = allImages.slice(0, 2);
+        });
+    }
+
+    return {
+        data: products,
+        pagination: {
+            pageNumber: parseInt(pageNumber, 10),
+            pageSize: limit,
+            totalElements,
+            totalPages: Math.ceil(totalElements / limit)
+        }
+    };
+};
+
 module.exports = {
     createProduct,
     getProducts,
-    getProductById
+    getProductById,
+    updateProduct,
+    toggleProductStatus,
+    getAdminProducts
 };

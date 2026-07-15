@@ -4,33 +4,33 @@ const { successResponse, errorResponse } = require('../utils/response.util');
 const search = async (req, res) => {
     try {
         const keyword = req.query.keyword || '';
+        const role = req.query.role || null; // MỚI THÊM: Hứng role từ URL query
 
-        // Kiểm tra và lấy giá trị pageNumber mặc định là 0
         let pageNumber = 0;
         if (req.query.pageNumber !== undefined && req.query.pageNumber !== '') {
             pageNumber = parseInt(req.query.pageNumber, 10);
         }
 
-        // Kiểm tra và lấy giá trị pageSize mặc định là 20
         let pageSize = 20;
         if (req.query.pageSize !== undefined && req.query.pageSize !== '') {
             pageSize = parseInt(req.query.pageSize, 10);
         }
 
         if (pageNumber < 0 || pageSize <= 0) {
-            return errorResponse(res, 'VALIDATION_FAILED', 'Invalid pagination parameters', 400);
+            return errorResponse(res, 'VALIDATION_FAILED', 'Tham số phân trang không hợp lệ', 400);
         }
 
-        const result = await userService.searchUsers({ keyword, pageNumber, pageSize });
+        // Truyền thêm biến role xuống service
+        const result = await userService.searchUsers({ keyword, role, pageNumber, pageSize });
 
         return successResponse(
             res,
             result.data,
             result.pagination,
-            'Users retrieved successfully'
+            'Lấy danh sách người dùng thành công'
         );
     } catch (error) {
-        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Something went wrong', 500, null, error.message);
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
     }
 };
 
@@ -172,6 +172,92 @@ const changePassword = async (req, res) => {
     }
 };
 
+const updateAccountByAdmin = async (req, res) => {
+    try {
+        const userId = req.params.id; // Lấy ID của user cần sửa từ URL
+        const { name, phone, role } = req.body;
+
+        if (!userId) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID tài khoản', 400);
+        }
+
+        await userService.updateUserByAdmin(userId, { name, phone, role });
+
+        return successResponse(res, null, null, 'Cập nhật tài khoản thành công');
+    } catch (error) {
+        if (error.message === 'NO_DATA_TO_UPDATE') {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Không có dữ liệu để cập nhật', 400);
+        }
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const changeStatus = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { status } = req.body; // 'ACTIVE' hoặc 'LOCKED'
+
+        if (!userId || !status) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID người dùng hoặc trạng thái mới', 400);
+        }
+
+        await userService.toggleUserStatus(userId, status);
+
+        return successResponse(
+            res,
+            null,
+            null,
+            status === 'LOCKED' ? 'Đã khóa tài khoản thành công' : 'Đã mở khóa tài khoản thành công'
+        );
+    } catch (error) {
+        if (error.message === 'INVALID_STATUS') {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Trạng thái không hợp lệ (Chỉ nhận ACTIVE hoặc LOCKED)', 400);
+        }
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const listAllPermissions = async (req, res) => {
+    try {
+        const permissions = await userService.getAllPermissions();
+        return successResponse(res, permissions, null, 'Lấy danh sách tất cả các quyền thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const getStaffPermissions = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        if (!userId) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID người dùng', 400);
+        }
+        const permissions = await userService.getUserPermissions(userId);
+        return successResponse(res, permissions, null, 'Lấy quyền của nhân viên thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
+const assignPermissions = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { permissionIds } = req.body; // Nhận mảng ID ví dụ: [1, 3, 4]
+
+        if (!userId) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID người dùng', 400);
+        }
+        if (!Array.isArray(permissionIds)) {
+            return errorResponse(res, 'VALIDATION_FAILED', 'Danh sách quyền gửi lên không hợp lệ (Phải là mảng)', 400);
+        }
+
+        await userService.updateUserPermissions(userId, permissionIds);
+        return successResponse(res, null, null, 'Cập nhật quyền cho nhân viên thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     search,
     getDetail,
@@ -179,5 +265,10 @@ module.exports = {
     updateMe,
     addAddress, updateAddress, deleteAddress,
     setDefaultAddress,
-    changePassword
+    changePassword,
+    updateAccountByAdmin,
+    changeStatus,
+    listAllPermissions,
+    getStaffPermissions,
+    assignPermissions
 };

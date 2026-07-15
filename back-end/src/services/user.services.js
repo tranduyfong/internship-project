@@ -1,40 +1,43 @@
 const db = require('../configs/database.config');
 const bcrypt = require('bcryptjs');
 
-const searchUsers = async ({ keyword, pageNumber, pageSize }) => {
-    // Ép kiểu chắc chắn thành số nguyên
+const searchUsers = async ({ keyword, role, pageNumber, pageSize }) => {
     const limit = parseInt(pageSize, 10);
     const offset = parseInt(pageNumber, 10) * limit;
 
-    let countQuery = 'SELECT COUNT(id) as total FROM users';
-    let dataQuery = 'SELECT id, name, email, phone, role, created_at, updated_at FROM users';
-
-    // Dùng chung một mảng params cho cả 2 query vì LIMIT/OFFSET đã nối thẳng vào chuỗi
+    let whereClauses = [];
     let queryParams = [];
 
-    // Xử lý tìm kiếm nếu có keyword
+    // 1. Lọc theo từ khóa tìm kiếm (Tên, Email, SĐT)
     if (keyword) {
-        const searchPattern = `%${keyword}%`;
-        const whereClause = ' WHERE name LIKE ? OR email LIKE ? OR phone LIKE ?';
-
-        countQuery += whereClause;
-        dataQuery += whereClause;
-
-        // Truyền 3 tham số tương ứng với 3 dấu ?
-        queryParams.push(searchPattern, searchPattern, searchPattern);
+        whereClauses.push('(name LIKE ? OR email LIKE ? OR phone LIKE ?)');
+        queryParams.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
     }
 
-    // Nối trực tiếp LIMIT và OFFSET thành chuỗi (An toàn tuyệt đối do đã parseInt)
+    // 2. Lọc theo vai trò (MỚI THÊM: ví dụ: 'STAFF', 'USER', 'ADMIN')
+    if (role) {
+        whereClauses.push('role = ?');
+        queryParams.push(role);
+    }
+
+    // Ghép các điều kiện lọc lại với nhau
+    let whereString = '';
+    if (whereClauses.length > 0) {
+        whereString = ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    let countQuery = 'SELECT COUNT(id) as total FROM users' + whereString;
+    // Lấy thêm cột status để hiển thị trạng thái hoạt động của tài khoản
+    let dataQuery = 'SELECT id, name, email, phone, role, status, created_at, updated_at FROM users' + whereString;
+
     dataQuery += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
-    // Thực thi query đếm tổng số lượng bản ghi
+    // Thực thi query
     const [countResult] = await db.execute(countQuery, queryParams);
     const totalElements = countResult[0].total;
 
-    // Thực thi query lấy danh sách dữ liệu
     const [users] = await db.execute(dataQuery, queryParams);
 
-    // Tính tổng số trang
     const totalPages = Math.ceil(totalElements / limit);
 
     return {
@@ -51,7 +54,7 @@ const searchUsers = async ({ keyword, pageNumber, pageSize }) => {
 const getUserById = async (userId) => {
     // 1. Lấy thông tin user (Bỏ password)
     const [users] = await db.execute(
-        'SELECT id, name, email, phone, role, created_at, updated_at FROM users WHERE id = ?',
+        'SELECT id, name, email, phone, role, status, created_at, updated_at FROM users WHERE id = ?',
         [userId]
     );
 
@@ -213,6 +216,91 @@ const changeMyPassword = async (userId, oldPassword, newPassword) => {
     await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
 };
 
+const updateUserByAdmin = async (userId, data) => {
+    const { name, phone, role } = data;
+
+    // Xây dựng mảng động để chỉ cập nhật những trường được truyền lên
+    let updateFields = [];
+    let queryParams = [];
+
+    if (name) {
+        updateFields.push('name = ?');
+        queryParams.push(name);
+    }
+    if (phone) {
+        updateFields.push('phone = ?');
+        queryParams.push(phone);
+    }
+    if (role) {
+        updateFields.push('role = ?');
+        queryParams.push(role);
+    }
+
+    if (updateFields.length === 0) {
+        throw new Error('NO_DATA_TO_UPDATE');
+    }
+
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+    queryParams.push(userId);
+
+    await db.execute(updateQuery, queryParams);
+};
+
+const toggleUserStatus = async (userId, status) => {
+    if (status !== 'ACTIVE' && status !== 'LOCKED') {
+        throw new Error('INVALID_STATUS');
+    }
+
+    await db.execute(
+        'UPDATE users SET status = ? WHERE id = ?',
+        [status, userId]
+    );
+};
+
+// 1. Lấy toàn bộ danh sách quyền có trong hệ thống (để hiện checkbox ở FE)
+const getAllPermissions = async () => {
+    const [permissions] = await db.execute('SELECT id, code, description FROM permissions');
+    return permissions;
+};
+
+// 2. Lấy danh sách quyền hiện tại của một nhân viên cụ thể
+const getUserPermissions = async (userId) => {
+    const [permissions] = await db.execute(`
+        SELECT p.id, p.code, p.description 
+        FROM permissions p
+        JOIN user_permissions up ON p.id = up.permission_id
+        WHERE up.user_id = ?
+    `, [userId]);
+    return permissions;
+};
+
+// 3. Cập nhật (gán mới) danh sách quyền cho một nhân viên
+const updateUserPermissions = async (userId, permissionIds) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Bước A: Xóa sạch toàn bộ quyền cũ của nhân viên này để tránh trùng lặp
+        await connection.execute('DELETE FROM user_permissions WHERE user_id = ?', [userId]);
+
+        // Bước B: Nếu Admin có tích chọn quyền mới, tiến hành lưu lại vào DB
+        if (permissionIds && permissionIds.length > 0) {
+            const values = permissionIds.map(pId => [userId, pId]);
+            await connection.query(
+                'INSERT INTO user_permissions (user_id, permission_id) VALUES ?',
+                [values]
+            );
+        }
+
+        await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
+
 module.exports = {
     searchUsers,
     getUserById,
@@ -222,5 +310,10 @@ module.exports = {
     setAddressDefault,
     updateMyAddress,
     deleteMyAddress,
-    changeMyPassword
+    changeMyPassword,
+    updateUserByAdmin,
+    toggleUserStatus,
+    getAllPermissions,
+    getUserPermissions,
+    updateUserPermissions
 };

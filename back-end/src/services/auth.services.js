@@ -49,6 +49,11 @@ const loginUser = async (email, password) => {
 
     const user = users[0];
 
+    // Kiểm tra tài khoản có thuộc tài khoản bị khóa hay không
+    if (user.status === 'LOCKED') {
+        return errorResponse(res, 'ACCOUNT_LOCKED', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!', 403);
+    }
+
     // 2. So sánh mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {

@@ -1,0 +1,112 @@
+<div class="space-y-6">
+    <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Quản lý tài khoản</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Quản lý phân quyền, cập nhật thông tin và kiểm soát bảo mật hệ thống
+            </p>
+        </div>
+
+        <div class="relative w-full sm:w-80">
+            <input type="text" [value]="searchTerm" (input)="onSearchInput($event)"
+                placeholder="Tìm kiếm theo tên, email..."
+                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-gray-50/50 hover:bg-gray-50 focus:bg-white" />
+            <div class="absolute left-3.5 top-2.5 text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <app-account-table [users]="users" [pagination]="pagination" [isLoading]="isLoading"
+        (pageChange)="onPageChange($event)" (editUser)="openEditModal($event)" (lockUser)="openLockModal($event)">
+    </app-account-table>
+</div>
+
+<app-modal [isOpen]="isEditModalOpen" [title]="'Cập nhật tài khoản người dùng'" [size]="'md'"
+    (close)="closeEditModal()">
+    <div modal-body class="space-y-6.5 py-2">
+        <p class="text-xs text-gray-400 font-medium">Bạn đang chỉnh sửa thông tin cho tài khoản: <span
+                class="font-bold text-indigo-600">{{ selectedUser?.email }}</span></p>
+
+        <app-form-input [id]="'edit-name'" [label]="'Họ và Tên'" [required]="true" [(value)]="editForm.name"
+            [errorMessage]="editFormErrors.name">
+        </app-form-input>
+
+        <app-form-input [id]="'edit-phone'" [label]="'Số điện thoại'" [required]="true" [(value)]="editForm.phone"
+            [errorMessage]="editFormErrors.phone">
+        </app-form-input>
+
+        <div class="space-y-1.5 w-full">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Vai trò quản trị <span
+                    class="text-red-500">*</span></label>
+            <select [(ngModel)]="editForm.role"
+                class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
+                <option value="user">User (Khách mua hàng)</option>
+                <option value="staff">Staff (Nhân viên vận hành)</option>
+                <option value="admin">Admin (Quản trị viên tối cao)</option>
+            </select>
+        </div>
+    </div>
+
+    <div modal-footer>
+        <button (click)="closeEditModal()"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition duration-150">Hủy
+            bỏ</button>
+        <button (click)="submitEditForm()"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition duration-150 shadow-sm">Xác
+            nhận Lưu</button>
+    </div>
+</app-modal>
+
+<app-modal [isOpen]="isLockModalOpen"
+    [title]="selectedUser?.status === 'LOCKED' ? 'Xác nhận mở khóa' : 'Xác nhận khóa tài khoản'" [size]="'sm'"
+    (close)="closeLockModal()">
+    <div modal-body class="space-y-3 text-center">
+        <div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3"
+            [ngClass]="selectedUser?.status === 'LOCKED' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'">
+            @if (selectedUser?.status === 'LOCKED') {
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+            } @else {
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+            }
+        </div>
+
+        <h4 class="text-sm font-bold text-gray-800">
+            @if (selectedUser?.status === 'LOCKED') {
+            Bạn chắc chắn muốn mở khóa tài khoản này?
+            } @else {
+            Xác nhận khóa tài khoản người dùng?
+            }
+        </h4>
+
+        <p class="text-xs text-gray-400 leading-relaxed">
+            @if (selectedUser?.status === 'LOCKED') {
+            Sau khi mở khóa, người dùng <span class="font-semibold text-gray-700">{{ selectedUser?.name }}</span> sẽ có
+            quyền đăng nhập và mua giày tại website bình thường.
+            } @else {
+            Tài khoản <span class="font-semibold text-gray-700">{{ selectedUser?.name }}</span> sẽ lập tức bị đình chỉ
+            đăng nhập và vô hiệu hóa mọi phiên làm việc ngay khi bạn xác nhận.
+            }
+        </p>
+    </div>
+
+    <div modal-footer>
+        <button (click)="closeLockModal()"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition duration-150">Thoát</button>
+        <button (click)="confirmLockToggle()"
+            [class]="selectedUser?.status === 'LOCKED'
+              ? 'px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition duration-150 shadow-sm'
+              : 'px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition duration-150 shadow-sm'">
+            Xác nhận đồng ý
+        </button>
+    </div>
+</app-modal>

@@ -1,0 +1,136 @@
+<div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden transition-all duration-300">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr
+                    class="bg-gray-50 text-gray-400 font-bold text-[11px] uppercase border-b border-gray-100 tracking-wider">
+                    <th class="p-4 pl-6">ID</th>
+                    <th class="p-4">Họ và Tên</th>
+                    <th class="p-4">Email liên hệ</th>
+                    <th class="p-4">Điện thoại</th>
+                    <th class="p-4">Vai trò</th>
+                    <th class="p-4">Trạng thái</th>
+                    <th class="p-4 text-center pr-6">Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-100 text-gray-700">
+                @if (isLoading) {
+                @for (item of [1,2,3,4,5,6,7,8,9,10]; track $index) {
+                <tr class="animate-pulse h-[59px]">
+                    <td class="p-4 pl-6">
+                        <div class="h-4 bg-gray-100 rounded-lg w-8"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-200 rounded-lg w-32"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-100 rounded-lg w-44"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-4 bg-gray-100 rounded-lg w-20"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-5 bg-gray-100 rounded-md w-12"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="h-5 bg-gray-100 rounded-full w-16"></div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="h-8 bg-gray-200 rounded-xl w-24 mx-auto"></div>
+                    </td>
+                </tr>
+                }
+                } @else {
+                @for (user of users; track user.id) {
+                <tr class="hover:bg-gray-50/30 transition-colors h-[59px]">
+                    <td class="p-4 pl-6 font-semibold text-gray-400">#{{ user.id }}</td>
+                    <td class="p-4 font-bold text-gray-900">{{ user.name }}</td>
+                    <td class="p-4 text-gray-500 font-medium">{{ user.email }}</td>
+                    <td class="p-4 text-gray-500 font-medium">{{ user.phone || 'N/A' }}</td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase border" [ngClass]="user.role === 'admin' 
+                  ? 'bg-red-50 text-red-600 border-red-100' 
+                  : user.role === 'staff' 
+                    ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                    : 'bg-gray-50 text-gray-600 border-gray-100'">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border" [ngClass]="user.status === 'LOCKED' 
+                  ? 'bg-red-50 text-red-500 border-red-100' 
+                  : 'bg-green-50 text-green-600 border-green-100'">
+                            {{ user.status === 'LOCKED' ? 'Đã khóa' : 'Hoạt động' }}
+                        </span>
+                    </td>
+
+                    <td class="p-4 text-center pr-6">
+                        <div class="flex items-center justify-center gap-2.5">
+
+                            <button (click)="onEdit(user)"
+                                class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition duration-150"
+                                title="Chỉnh sửa vai trò">
+                                <svg class="w-4 h-4 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+
+                            @if (user.status === 'LOCKED') {
+                            <button (click)="onLockToggle(user)"
+                                class="p-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition duration-150"
+                                title="Mở khóa tài khoản">
+                                <svg class="w-4 h-4 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </button>
+                            } @else {
+                            <button (click)="onLockToggle(user)"
+                                class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition duration-150"
+                                title="Khóa tài khoản">
+                                <svg class="w-4 h-4 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                            }
+
+                        </div>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="7" class="p-8 text-center h-[590px]">
+                        <div class="flex flex-col items-center justify-center h-full space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-full text-gray-400">
+                                <svg class="w-10 h-10 stroke-[1.5]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.115a8.312 8.312 0 01-3 1.34M11.798 17.5A15.3 15.3 0 0112 18.003c0 .113-.003.225-.008.337m-1.192-.84a15.3 15.3 0 01-3 1.34M7.5 19.128V19c0-1.113.285-2.16.786-3.07M7.5 19.128a9.38 9.38 0 01-2.625.372 9.337 9.337 0 01-4.121-.952 4.125 4.125 0 017.533-2.493M13.5 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800">Không tìm thấy tài khoản nào</p>
+                                <p class="text-xs text-gray-400 mt-1">Vui lòng thử điều chỉnh lại từ khóa hoặc dọn dẹp ô
+                                    tìm kiếm.</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                }
+
+                @for (row of getEmptyRowsArray(users.length); track $index) {
+                <tr class="h-[59px] hover:bg-transparent">
+                    <td colspan="7" class="p-4 text-transparent select-none">&nbsp;</td>
+                </tr>
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <app-pagination [currentPage]="pagination.currentPage" [totalPage]="pagination.totalPage"
+        [totalItems]="pagination.total" [limit]="10" (pageChange)="onPageChange($event)"></app-pagination>
+</div>
