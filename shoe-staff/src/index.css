@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+* {
+  font-family: 'Quicksand', sans-serif !important;
+  /* Ép toàn bộ web dùng font này */
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f4f6f8;
+  /* Màu nền nhẹ nhàng cho trang admin */
+}
