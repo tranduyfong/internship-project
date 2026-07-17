@@ -40,3 +40,26 @@ export interface ApiResponse<T> {
     totalElements?: number;
     totalPages?: number;
 }
+
+export interface ProductImage {
+    id: number;
+    image_url: string;
+}
+
+export interface ProductSize {
+    id: number;
+    size: number;
+    quantity: number;
+}
+
+export interface ProductDetail {
+    id: number;
+    name_product: string;
+    price_product: string;
+    import_price: string;
+    descript_product: string;
+    brand: string;
+    status: string;
+    images: ProductImage[];
+    sizes: ProductSize[];
+}

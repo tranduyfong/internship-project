@@ -1,5 +1,9 @@
-import { List, ListItem, ListItemButton, ListItemText, Drawer, Box, Typography } from '@mui/material';
+import { List, ListItem, ListItemButton, ListItemText, ListItemIcon, Drawer, Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import LogoutIcon from '@mui/icons-material/Logout';
 import type { Permission } from '../types/types';
+import { TAB_CONFIG } from '../utils/tab.configs';
 
 interface SidebarProps {
     activeTab: string;
@@ -7,47 +11,44 @@ interface SidebarProps {
     userPermissions: Permission[];
 }
 
-const TAB_CONFIG = [
-    { name: 'Quản lý ảnh Banner', requiredCode: 'VIEW_BANNER' },
-    { name: 'Quản lý sản phẩm', requiredCode: 'VIEW_PRODUCT' },
-    { name: 'Thông tin giới thiệu', requiredCode: 'VIEW_INFO' },
-    { name: 'Thông tin liên hệ', requiredCode: 'CHAT_CUSTOMER' },
-];
-
 const SidebarContainer = ({ activeTab, onTabChange, userPermissions }: SidebarProps) => {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_info');
+        toast.info('Đã đăng xuất khỏi hệ thống');
+        navigate('/login');
+    };
 
     return (
-        <Drawer variant="permanent" sx={{ width: 250, flexShrink: 0, '& .MuiDrawer-paper': { width: 250 } }}>
+        <Drawer
+            variant="permanent"
+            sx={{
+                width: 250,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': { width: 250, display: 'flex', flexDirection: 'column' }
+            }}
+        >
             <Box sx={{ p: 3, borderBottom: '1px solid #f0f0f0' }}>
                 <Typography variant="h5" color="primary" sx={{ fontWeight: 800 }}>Admin</Typography>
             </Box>
+
             <List sx={{ mt: 1 }}>
                 {TAB_CONFIG.map((tab, index) => {
-                    // Kiểm tra xem user có mã quyền tương ứng với tab này không
                     const hasPermission = userPermissions.some(p => p.code === tab.requiredCode);
+                    const isActive = activeTab === tab.name;
 
                     return (
                         <ListItem key={index} disablePadding sx={{ mb: 0.5 }}>
                             <ListItemButton
-                                selected={activeTab === tab.name}
-                                disabled={!hasPermission} // Vô hiệu hóa click nếu không có quyền
-                                onClick={() => {
-                                    // Chỉ cho phép chuyển tab nếu có quyền (phòng ngừa thêm)
-                                    if (hasPermission) {
-                                        onTabChange(tab.name);
-                                    }
-                                }}
+                                selected={isActive}
+                                disabled={!hasPermission}
+                                onClick={() => { if (hasPermission) onTabChange(tab.name); }}
                             >
                                 <ListItemText
                                     primary={
-                                        <Typography
-                                            sx={{
-                                                fontWeight: activeTab === tab.name ? 700 : 500,
-                                                fontSize: '14px',
-                                                // Logic màu: Không có quyền -> xám nhạt, Đang chọn -> xanh, Bình thường -> xám đậm
-                                                color: !hasPermission ? '#bdbdbd' : (activeTab === tab.name ? '#1976d2' : '#555')
-                                            }}
-                                        >
+                                        <Typography sx={{ fontWeight: isActive ? 700 : 500, fontSize: '14px', color: !hasPermission ? '#bdbdbd' : (isActive ? '#1976d2' : '#555') }}>
                                             {tab.name}
                                         </Typography>
                                     }
@@ -57,6 +58,24 @@ const SidebarContainer = ({ activeTab, onTabChange, userPermissions }: SidebarPr
                     );
                 })}
             </List>
+
+            {/* Vùng đáy Sidebar cho nút Đăng xuất (Dùng mt: 'auto' để đẩy nó xuống kịch sàn) */}
+            <Box sx={{ mt: 'auto', borderTop: '1px solid #f0f0f0', p: 2 }}>
+                <ListItem disablePadding>
+                    <ListItemButton onClick={handleLogout} sx={{ borderRadius: 1, backgroundColor: '#fff5f5', '&:hover': { backgroundColor: '#ffebee' } }}>
+                        <ListItemIcon sx={{ minWidth: 40, color: '#d32f2f' }}>
+                            <LogoutIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={
+                                <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#d32f2f' }}>
+                                    Đăng xuất
+                                </Typography>
+                            }
+                        />
+                    </ListItemButton>
+                </ListItem>
+            </Box>
         </Drawer>
     );
 };

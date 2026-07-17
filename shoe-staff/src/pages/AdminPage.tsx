@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SidebarContainer from '../containers/SidebarContainer';
 import HeaderContainer from '../containers/HeaderContainer';
-import ProductContainer from '../containers/ProductContainer';
 import type { Permission } from '../types/types';
 import { Box } from '@mui/material';
 import { userService } from '../services/userService';
+import ProductPage from './ProductPage';
 
 const AdminPage = () => {
     const navigate = useNavigate();
@@ -40,7 +40,7 @@ const AdminPage = () => {
     const renderContent = () => {
         switch (activeTab) {
             case 'Quản lý sản phẩm':
-                return <ProductContainer />;
+                return <ProductPage userPermissions={permissions} />;
             default:
                 return <div className="card p-4">Tính năng {activeTab} đang phát triển.</div>;
         }
