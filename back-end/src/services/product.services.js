@@ -188,24 +188,66 @@ const getProductById = async (productId) => {
     return product;
 };
 
-const updateProduct = async (productId, updateData) => {
-    const { name_product, price_product, importPrice, descript_product, brand } = updateData;
+const updateProduct = async (productId, updateData, files) => {
+    const { name_product, price_product, importPrice, descript_product, brand, deletedImageIds } = updateData;
 
-    let updateFields = [];
-    let queryParams = [];
+    // Lấy connection để dùng Transaction
+    const connection = await db.getConnection();
 
-    if (name_product) { updateFields.push('name_product = ?'); queryParams.push(name_product); }
-    if (price_product) { updateFields.push('price_product = ?'); queryParams.push(price_product); }
-    if (importPrice) { updateFields.push('import_price = ?'); queryParams.push(importPrice); }
-    if (descript_product) { updateFields.push('descript_product = ?'); queryParams.push(descript_product); }
-    if (brand) { updateFields.push('brand = ?'); queryParams.push(brand); }
+    try {
+        await connection.beginTransaction();
 
-    if (updateFields.length === 0) throw new Error('NO_DATA_TO_UPDATE');
+        // 1. Cập nhật thông tin cơ bản (Nếu có truyền lên)
+        let updateFields = [];
+        let queryParams = [];
 
-    const updateQuery = `UPDATE products SET ${updateFields.join(', ')} WHERE id = ?`;
-    queryParams.push(productId);
+        if (name_product) { updateFields.push('name_product = ?'); queryParams.push(name_product); }
+        if (price_product) { updateFields.push('price_product = ?'); queryParams.push(price_product); }
+        if (importPrice) { updateFields.push('import_price = ?'); queryParams.push(importPrice); }
+        if (descript_product) { updateFields.push('descript_product = ?'); queryParams.push(descript_product); }
+        if (brand) { updateFields.push('brand = ?'); queryParams.push(brand); }
 
-    await db.execute(updateQuery, queryParams);
+        if (updateFields.length > 0) {
+            const updateQuery = `UPDATE products SET ${updateFields.join(', ')} WHERE id = ?`;
+            queryParams.push(productId);
+            await connection.execute(updateQuery, queryParams);
+        }
+
+        // 2. Xóa ảnh cũ nếu FE có gửi danh sách ID ảnh cần xóa
+        if (deletedImageIds && deletedImageIds.length > 0) {
+            const placeholders = deletedImageIds.map(() => '?').join(',');
+            // Chặn thêm điều kiện product_id = ? để tránh hacker gửi ID ảnh của sản phẩm khác
+            await connection.execute(
+                `DELETE FROM product_images WHERE id IN (${placeholders}) AND product_id = ?`,
+                [...deletedImageIds, productId]
+            );
+        }
+
+        // 3. Thêm ảnh mới nếu có file được upload lên
+        if (files && files.length > 0) {
+            const imageValues = files.map(file => [
+                productId,
+                `/uploads/products/${file.filename}`
+            ]);
+
+            await connection.query(
+                'INSERT INTO product_images (product_id, image_url) VALUES ?',
+                [imageValues]
+            );
+        }
+
+        // 4. Nếu không có gì thay đổi thì quăng lỗi
+        if (updateFields.length === 0 && (!deletedImageIds || deletedImageIds.length === 0) && (!files || files.length === 0)) {
+            throw new Error('NO_DATA_TO_UPDATE');
+        }
+
+        await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
 };
 
 // 2. Chuyển trạng thái sản phẩm (Đang bán -> Ngưng bán và ngược lại)

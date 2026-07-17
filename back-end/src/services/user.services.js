@@ -38,16 +38,38 @@ const searchUsers = async ({ keyword, role, pageNumber, pageSize }) => {
 
     const [users] = await db.execute(dataQuery, queryParams);
 
+    if (users.length > 0) {
+        const userIds = users.map(u => u.id);
+        const placeholders = userIds.map(() => '?').join(',');
+
+        // Chỉ lấy 1 lần duy nhất cho toàn bộ danh sách ID này
+        const [perms] = await db.execute(`
+            SELECT up.user_id, p.id, p.code, p.description 
+            FROM user_permissions up
+            JOIN permissions p ON up.permission_id = p.id
+            WHERE up.user_id IN (${placeholders})
+        `, userIds);
+
+        const permsByUser = perms.reduce((acc, curr) => {
+            if (!acc[curr.user_id]) acc[curr.user_id] = [];
+            acc[curr.user_id].push({
+                id: curr.id,
+                code: curr.code,
+                description: curr.description
+            });
+            return acc;
+        }, {});
+
+        users.forEach(user => {
+            user.permissions = permsByUser[user.id] || [];
+        });
+    }
+
     const totalPages = Math.ceil(totalElements / limit);
 
     return {
         data: users,
-        pagination: {
-            pageNumber: parseInt(pageNumber, 10),
-            pageSize: limit,
-            totalElements,
-            totalPages
-        }
+        pagination: { pageNumber: parseInt(pageNumber, 10), pageSize: limit, totalElements, totalPages }
     };
 };
 

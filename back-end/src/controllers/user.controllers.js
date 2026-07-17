@@ -258,6 +258,19 @@ const assignPermissions = async (req, res) => {
     }
 };
 
+const getMyPermissions = async (req, res) => {
+    try {
+        const userId = req.user.userId; // Lấy an toàn từ Token, không quan tâm URL
+
+        // Tận dụng lại hàm Service đã viết ở bài trước
+        const permissions = await userService.getUserPermissions(userId);
+
+        return successResponse(res, permissions, null, 'Lấy danh sách quyền của tôi thành công');
+    } catch (error) {
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
+    }
+};
+
 module.exports = {
     search,
     getDetail,
@@ -270,5 +283,6 @@ module.exports = {
     changeStatus,
     listAllPermissions,
     getStaffPermissions,
-    assignPermissions
+    assignPermissions,
+    getMyPermissions
 };

@@ -93,13 +93,24 @@ const editProduct = async (req, res) => {
         const productId = req.params.id;
         const { name_product, price_product, importPrice, descript_product, brand } = req.body;
 
+        // Mảng chứa ID các ảnh người dùng muốn xóa
+        let deletedImageIds = [];
+        if (req.body.deletedImageIds) {
+            try {
+                deletedImageIds = JSON.parse(req.body.deletedImageIds);
+            } catch (e) {
+                return errorResponse(res, 'VALIDATION_FAILED', 'Định dạng deletedImageIds không hợp lệ', 400);
+            }
+        }
+
         if (!productId) {
             return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID sản phẩm', 400);
         }
 
+        // Truyền thêm deletedImageIds và req.files xuống Service
         await productService.updateProduct(productId, {
-            name_product, price_product, importPrice, descript_product, brand
-        });
+            name_product, price_product, importPrice, descript_product, brand, deletedImageIds
+        }, req.files);
 
         return successResponse(res, null, null, 'Cập nhật sản phẩm thành công');
     } catch (error) {
