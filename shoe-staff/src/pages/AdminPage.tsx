@@ -6,6 +6,7 @@ import type { Permission } from '../types/types';
 import { Box } from '@mui/material';
 import { userService } from '../services/userService';
 import ProductPage from './ProductPage';
+import ChatPage from './ChatPage';
 
 const AdminPage = () => {
     const navigate = useNavigate();
@@ -41,6 +42,8 @@ const AdminPage = () => {
         switch (activeTab) {
             case 'Quản lý sản phẩm':
                 return <ProductPage userPermissions={permissions} />;
+            case 'Chăm sóc khách hàng':
+                return <ChatPage />;
             default:
                 return <div className="card p-4">Tính năng {activeTab} đang phát triển.</div>;
         }

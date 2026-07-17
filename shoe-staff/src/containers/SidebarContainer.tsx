@@ -1,9 +1,12 @@
-import { List, ListItem, ListItemButton, ListItemText, ListItemIcon, Drawer, Box, Typography } from '@mui/material';
+import { List, ListItem, ListItemButton, ListItemText, ListItemIcon, Drawer, Box, Typography, Badge } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LogoutIcon from '@mui/icons-material/Logout';
 import type { Permission } from '../types/types';
 import { TAB_CONFIG } from '../utils/tab.configs';
+import { chatService } from '../services/chatService';
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 interface SidebarProps {
     activeTab: string;
@@ -13,6 +16,47 @@ interface SidebarProps {
 
 const SidebarContainer = ({ activeTab, onTabChange, userPermissions }: SidebarProps) => {
     const navigate = useNavigate();
+    const [totalUnread, setTotalUnread] = useState(0);
+
+    useEffect(() => {
+        const hasChatPermission = userPermissions.some(p => p.code === 'CHAT_CUSTOMER');
+        const fetchUnread = async () => {
+            try {
+                if (hasChatPermission) {
+                    const res = await chatService.getUnreadCount();
+                    setTotalUnread(res.data.unreadCount);
+                }
+            } catch (error) {
+                console.error("Lỗi đếm tin nhắn:", error);
+            }
+        };
+        fetchUnread();
+        if (hasChatPermission) {
+            const token = localStorage.getItem('access_token');
+            const socket = io('http://localhost:8000', {
+                auth: { token }
+            });
+
+            // Lắng nghe sự kiện khách nhắn tin tới quầy trực ban
+            socket.on('new_customer_message', () => {
+                setTotalUnread(prev => prev + 1);
+            });
+
+            return () => {
+                socket.disconnect();
+            };
+        }
+    }, [userPermissions]);
+
+    useEffect(() => {
+        const refreshUnread = async () => {
+            const res = await chatService.getUnreadCount();
+            setTotalUnread(res.data.unreadCount);
+        };
+        if (userPermissions.some(p => p.code === 'CHAT_CUSTOMER')) {
+            refreshUnread();
+        }
+    }, [activeTab, userPermissions]);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
@@ -49,7 +93,13 @@ const SidebarContainer = ({ activeTab, onTabChange, userPermissions }: SidebarPr
                                 <ListItemText
                                     primary={
                                         <Typography sx={{ fontWeight: isActive ? 700 : 500, fontSize: '14px', color: !hasPermission ? '#bdbdbd' : (isActive ? '#1976d2' : '#555') }}>
-                                            {tab.name}
+                                            {tab.requiredCode === 'CHAT_CUSTOMER' ? (
+                                                <Badge badgeContent={totalUnread} color="error" max={99}>
+                                                    {tab.name}
+                                                </Badge>
+                                            ) : (
+                                                tab.name
+                                            )}
                                         </Typography>
                                     }
                                 />

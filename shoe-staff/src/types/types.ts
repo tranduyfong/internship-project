@@ -63,3 +63,21 @@ export interface ProductDetail {
     images: ProductImage[];
     sizes: ProductSize[];
 }
+
+export interface ChatRoom {
+    room_id: number;
+    customer_id: number;
+    customer_name: string;
+    last_message: string;
+    updated_at: string;
+    unread_count: number;
+}
+
+export interface ChatMessage {
+    id: number;
+    sender_id: number;
+    sender_type: 'CUSTOMER' | 'STAFF';
+    message: string;
+    is_read: number;
+    created_at: string;
+}
