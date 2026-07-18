@@ -68,47 +68,49 @@ const ProductDetailPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ mb: 5, mt: 3 }}>
-            <Typography sx={{ color: '#666', fontSize: '13px', mb: 3, fontFamily: 'Quicksand', display: 'flex' }}>
-                <Link to={"/"} style={{ textDecoration: 'none', marginRight: '3px' }}>Trang chủ</Link> /
-                <Typography sx={{ color: '#666', fontSize: '13px', marginLeft: '3px', fontWeight: 'bold' }}>{product.name_product}</Typography>
-            </Typography>
+        <div className='container px-0'>
+            <Box sx={{ mb: 5, mt: 3 }}>
+                <Typography sx={{ color: '#666', fontSize: '13px', mb: 3, fontFamily: 'Quicksand', display: 'flex' }}>
+                    <Link to={"/"} style={{ textDecoration: 'none', marginRight: '3px' }}>Trang chủ</Link> /
+                    <Typography sx={{ color: '#666', fontSize: '13px', marginLeft: '3px', fontWeight: 'bold' }}>{product.name_product}</Typography>
+                </Typography>
 
-            {/* Lưới phân chia layout của Bootstrap */}
-            <div className="row g-4">
-                {/* Khối 1: Ảnh (Trái) */}
-                <div className="col-12 col-md-5">
-                    <ProductImages images={product.images} name={product.name_product} />
+                {/* Lưới phân chia layout của Bootstrap */}
+                <div className="row g-4">
+                    {/* Khối 1: Ảnh (Trái) */}
+                    <div className="col-12 col-md-5">
+                        <ProductImages images={product.images} name={product.name_product} />
+                    </div>
+
+                    {/* Khối 2: Thông tin & Đặt hàng (Giữa) */}
+                    <div className="col-12 col-md-4">
+                        <ProductInfo
+                            id={product.id}
+                            name={product.name_product}
+                            price={product.price_product}
+                            sizes={product.sizes}
+                            onAction={handleCartAction}
+                            onScrollToSizeGuide={handleScrollToSizeGuide}
+                        />
+                    </div>
+
+                    {/* Khối 3: Các chính sách phụ (Phải) */}
+                    <div className="col-12 col-md-3">
+                        <ProductPolicy />
+                    </div>
                 </div>
 
-                {/* Khối 2: Thông tin & Đặt hàng (Giữa) */}
-                <div className="col-12 col-md-4">
-                    <ProductInfo
-                        id={product.id}
-                        name={product.name_product}
-                        price={product.price_product}
-                        sizes={product.sizes}
-                        onAction={handleCartAction}
-                        onScrollToSizeGuide={handleScrollToSizeGuide}
+                {/* Khối 4: Hệ thống Tabs thông tin mở rộng (Dưới) */}
+                <div ref={tabsRef}>
+                    <ProductTabs
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        description={product.descript_product}
+                        brand={product.brand}
                     />
                 </div>
-
-                {/* Khối 3: Các chính sách phụ (Phải) */}
-                <div className="col-12 col-md-3">
-                    <ProductPolicy />
-                </div>
-            </div>
-
-            {/* Khối 4: Hệ thống Tabs thông tin mở rộng (Dưới) */}
-            <div ref={tabsRef}>
-                <ProductTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    description={product.descript_product}
-                    brand={product.brand}
-                />
-            </div>
-        </Box>
+            </Box>
+        </div>
     );
 };
 

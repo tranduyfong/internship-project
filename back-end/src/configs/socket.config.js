@@ -5,7 +5,6 @@ const chatService = require('../services/chat.services');
 let io;
 
 module.exports = {
-    // Hàm khởi tạo Socket đính kèm vào HTTP Server
     init: (httpServer) => {
         io = new Server(httpServer, {
             cors: {
@@ -24,25 +23,30 @@ module.exports = {
                 token = socket.handshake.headers.authorization.split(' ')[1];
             }
 
-            console.log("Token trích xuất được là:", token ? "Đã có token" : "NULL");
-
+            // SỬA Ở ĐÂY: NẾU KHÔNG CÓ TOKEN, ĐÓN TIẾP NHƯ KHÁCH VÃNG LAI (GUEST)
             if (!token) {
-                return next(new Error('Authentication Error: Không tìm thấy Token'));
+                socket.user = { role: 'GUEST' };
+                return next();
             }
 
             try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                // Xóa ngoặc kép thừa nếu có
+                const cleanToken = token.replace(/['"]+/g, '');
+                const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET);
                 socket.user = decoded;
                 next();
             } catch (error) {
-                console.error("Lỗi giải mã token:", error.message);
-                return next(new Error('Authentication Error: Token không hợp lệ hoặc đã hết hạn'));
+                // NẾU TOKEN HẾT HẠN HOẶC LỖI, CŨNG CHO LÀM GUEST THAY VÌ BÁO LỖI VÀ CHẶN KẾT NỐI
+                console.error("Lỗi giải mã token, chuyển thành GUEST");
+                socket.user = { role: 'GUEST' };
+                return next();
             }
         });
 
         io.on('connection', (socket) => {
-            const userId = socket.user.id || socket.user.userId;
-            const role = (socket.user.role || 'USER').toUpperCase();
+            // SỬA Ở ĐÂY: Dùng id của socket làm mã tạm thời nếu là GUEST
+            const userId = socket.user?.id || socket.user?.userId || socket.id;
+            const role = (socket.user?.role || 'GUEST').toUpperCase();
 
             console.log(`Thiết bị kết nối Socket - ID: ${userId} - Role: ${role}`);
 
@@ -53,12 +57,18 @@ module.exports = {
 
             // Sự kiện Join Phòng chat cụ thể (Để nhắn tin)
             socket.on('join_chat', (roomId) => {
-                socket.join(roomId.toString());
-                console.log(`User ${userId} đã join phòng ${roomId}`);
+                // Guest không được join phòng chat nội bộ
+                if (role !== 'GUEST') {
+                    socket.join(roomId.toString());
+                    console.log(`User ${userId} đã join phòng ${roomId}`);
+                }
             });
 
             // Sự kiện Gửi Tin Nhắn
             socket.on('send_message', async (data) => {
+                // Khách vãng lai không được nhắn tin
+                if (role === 'GUEST') return;
+
                 try {
                     const senderType = (role === 'ADMIN' || role === 'STAFF') ? 'STAFF' : 'CUSTOMER';
 
@@ -69,7 +79,6 @@ module.exports = {
                         message: data.message
                     };
 
-                    // Lưu vào Database
                     await chatService.saveMessage(
                         messageData.roomId,
                         messageData.senderId,
@@ -77,12 +86,9 @@ module.exports = {
                         messageData.message
                     );
 
-                    // 1. Phát tin nhắn lại cho những người ĐANG MỞ phòng này
                     io.to(data.roomId.toString()).emit('receive_message', messageData);
 
-                    // 2. NẾU KHÁCH GỬI -> PHÁT THÔNG BÁO CHO TOÀN BỘ NHÂN VIÊN (A, B, C)
                     if (senderType === 'CUSTOMER') {
-                        // Bắn thẳng vào 'staff_desk' thay vì bắn lung tung cho mọi người
                         io.to('staff_desk').emit('new_customer_message', messageData);
                     }
                 } catch (error) {
@@ -98,7 +104,6 @@ module.exports = {
         return io;
     },
 
-    // Hàm lấy instance của Socket để dùng ở các Controller khác (như lúc bạn dùng cho thông báo mua hàng VNPay)
     getIO: () => {
         if (!io) {
             throw new Error('Socket.io chưa được khởi tạo!');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 import { io, Socket } from 'socket.io-client';
 import { chatService } from '../services/chatService';
@@ -12,7 +12,18 @@ const ChatPage = () => {
     const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-    // 1. Khởi tạo dữ liệu phòng và Socket
+    const [chatPage, setChatPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    // CHÌA KHÓA: Dùng Ref để khóa cứng hàm tải thêm, tránh bị trình duyệt gọi API 10 lần trong 1 giây khi cuộn
+    const loadingRef = useRef(false);
+
+    const activeRoomIdRef = useRef<number | null>(null);
+    useEffect(() => {
+        activeRoomIdRef.current = activeRoomId;
+    }, [activeRoomId]);
+
     useEffect(() => {
         const fetchRooms = async () => {
             try {
@@ -24,114 +35,108 @@ const ChatPage = () => {
         };
         fetchRooms();
 
-        // Kết nối Socket kèm Token (Khớp với socket.handshake.auth.token của BE)
         const token = localStorage.getItem('access_token');
-        const newSocket = io('http://localhost:8000', {
-            auth: { token }
-        });
-
+        const newSocket = io('http://localhost:8000', { auth: { token } });
         setSocket(newSocket);
 
         return () => { newSocket.close(); };
     }, []);
 
-    // 2. Lắng nghe các sự kiện Socket toàn cục
     useEffect(() => {
         if (!socket) return;
 
-        // Bắt sự kiện có tin nhắn từ khách (Khớp với io.emit('new_customer_message') của BE)
         socket.on('new_customer_message', (data: { roomId: number, message: string }) => {
             setRooms(prevRooms => {
                 const roomIndex = prevRooms.findIndex(r => r.room_id === data.roomId);
                 if (roomIndex > -1) {
-                    const updatedRoom = {
-                        ...prevRooms[roomIndex],
-                        last_message: data.message,
-                        unread_count: prevRooms[roomIndex].unread_count + 1
-                    };
+                    const updatedRoom = { ...prevRooms[roomIndex], last_message: data.message, unread_count: prevRooms[roomIndex].unread_count + 1 };
                     const newRooms = [...prevRooms];
                     newRooms.splice(roomIndex, 1);
-                    return [updatedRoom, ...newRooms]; // Đẩy phòng có tin mới lên đầu
+                    return [updatedRoom, ...newRooms];
                 }
                 return prevRooms;
             });
         });
 
-        // Bắt sự kiện nhận tin nhắn mới (Khớp với io.to(room).emit('receive_message') của BE)
         socket.on('receive_message', (data: any) => {
-            const newMessage: ChatMessage = {
-                id: Date.now(),
-                sender_id: data.senderId,
-                sender_type: data.senderType,
-                message: data.message,
-                is_read: 0,
-                created_at: new Date().toISOString()
-            };
-            setMessages(prev => [...prev, newMessage]);
+            if (data.roomId === activeRoomIdRef.current) {
+                const newMessage: ChatMessage = {
+                    id: Date.now(), sender_id: data.senderId, sender_type: data.senderType, message: data.message, is_read: 0, created_at: new Date().toISOString()
+                };
+                setMessages(prev => [...prev, newMessage]);
+            }
         });
 
-        return () => {
-            socket.off('new_customer_message');
-            socket.off('receive_message');
-        };
+        return () => { socket.off('new_customer_message'); socket.off('receive_message'); };
     }, [socket]);
 
-    // 3. Xử lý khi click vào 1 phòng
     const handleSelectRoom = async (roomId: number) => {
         setActiveRoomId(roomId);
+        setChatPage(1);
+        setHasMore(true);
 
         try {
-            // Tải lịch sử tin nhắn
             const res = await chatService.getRoomMessages(roomId, 1);
-            setMessages(res.data.reverse()); // Đảo ngược mảng để tin mới nhất nằm dưới
+            const fetchedMessages = res.data.messages;
 
-            // SỬA Ở ĐÂY: Truyền trực tiếp roomId thay vì object { roomId } để khớp với BE
+            setMessages(fetchedMessages.reverse());
+
+            if (fetchedMessages.length < 10) {
+                setHasMore(false);
+            }
+
             socket?.emit('join_chat', roomId);
-
-            // Đánh dấu đã đọc
             await chatService.markAsRead(roomId);
-
-            // Reset số lượng chưa đọc trên UI nội bộ của list
             setRooms(prev => prev.map(r => r.room_id === roomId ? { ...r, unread_count: 0 } : r));
         } catch (error) {
             console.error("Lỗi khi tải phòng chat:", error);
         }
     };
 
-    // 4. Xử lý Gửi tin nhắn
+    // ĐÃ SỬA: Bảo vệ hàm tải thêm bằng loadingRef
+    const handleLoadMore = async () => {
+        if (!activeRoomId || !hasMore || loadingRef.current) return;
+
+        loadingRef.current = true; // Khóa cửa không cho ai gọi nữa
+        setIsLoadingMore(true);
+
+        try {
+            const nextPage = chatPage + 1;
+            const res = await chatService.getRoomMessages(activeRoomId, nextPage);
+            const newMessages = res.data.messages;
+
+            if (newMessages.length > 0) {
+                setMessages(prev => [...newMessages.reverse(), ...prev]);
+                setChatPage(nextPage);
+            }
+
+            if (newMessages.length < 10) {
+                setHasMore(false);
+            }
+        } catch (error) {
+            console.error("Lỗi tải thêm lịch sử:", error);
+        } finally {
+            loadingRef.current = false; // Mở khóa
+            setIsLoadingMore(false);
+        }
+    };
+
     const handleSendMessage = (text: string) => {
         if (!socket || !activeRoomId) return;
 
         const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
-
-        // Payload khớp hoàn toàn với cấu trúc data Backend mong đợi
-        const payload = {
-            roomId: activeRoomId,
-            senderId: userInfo.id,
-            senderType: "STAFF",
-            message: text
-        };
+        const payload = { roomId: activeRoomId, senderId: userInfo.id, senderType: "STAFF", message: text };
 
         socket.emit('send_message', payload);
-
-        // Cập nhật last_message ở cột trái
         setRooms(prev => prev.map(r => r.room_id === activeRoomId ? { ...r, last_message: text } : r));
     };
 
     const activeRoomObj = rooms.find(r => r.room_id === activeRoomId) || null;
 
     return (
-        <Box
-            className="card shadow-sm border-0"
-            sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                height: 'calc(100vh - 120px)',
-                overflow: 'hidden'
-            }}
-        >
+        <Box className="card shadow-sm border-0" sx={{ display: 'flex', flexDirection: 'row', height: 'calc(100vh - 120px)', overflow: 'hidden' }}>
             <ChatRoomList rooms={rooms} activeRoomId={activeRoomId} onSelectRoom={handleSelectRoom} />
-            <ChatWindow activeRoom={activeRoomObj} messages={messages} onSendMessage={handleSendMessage} />
+            <ChatWindow activeRoom={activeRoomObj} messages={messages} onSendMessage={handleSendMessage} onLoadMore={handleLoadMore} isLoadingMore={isLoadingMore} hasMore={hasMore} />
         </Box>
     );
 };

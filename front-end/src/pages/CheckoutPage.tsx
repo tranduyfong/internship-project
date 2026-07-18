@@ -107,19 +107,21 @@ const CheckoutPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ mb: 10, mt: 5 }}>
-            <div className="row g-5">
-                {/* Khối Form chiếm 7 cột (Bên trái) */}
-                <div className="col-12 col-lg-7">
-                    <CheckoutForm formData={formData} setFormData={setFormData} />
-                </div>
+        <div className='container'>
+            <Box sx={{ mb: 10, mt: 5 }}>
+                <div className="row g-5">
+                    {/* Khối Form chiếm 7 cột (Bên trái) */}
+                    <div className="col-12 col-lg-7">
+                        <CheckoutForm formData={formData} setFormData={setFormData} />
+                    </div>
 
-                {/* Khối Summary chiếm 5 cột (Bên phải) */}
-                <div className="col-12 col-lg-5">
-                    <CheckoutSummary items={checkoutItems} onSubmit={handlePlaceOrder} />
+                    {/* Khối Summary chiếm 5 cột (Bên phải) */}
+                    <div className="col-12 col-lg-5">
+                        <CheckoutSummary items={checkoutItems} onSubmit={handlePlaceOrder} />
+                    </div>
                 </div>
-            </div>
-        </Box>
+            </Box>
+        </div>
     );
 };
 

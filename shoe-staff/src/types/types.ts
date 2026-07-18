@@ -81,3 +81,13 @@ export interface ChatMessage {
     is_read: number;
     created_at: string;
 }
+
+export interface Banner {
+    id: number;
+    image_url: string;
+    target_link: string;
+    display_order: number;
+    status: 'ACTIVE' | 'INACTIVE';
+    created_at: string;
+    updated_at: string;
+}

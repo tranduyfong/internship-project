@@ -94,50 +94,52 @@ const CartPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ mb: 10, mt: 3, fontFamily: 'Quicksand' }}>
-            <Typography sx={{ color: '#666', fontSize: '13px', mb: 3 }}>
-                <Link to="/" style={{ color: '#666', textDecoration: 'none' }}>Trang chủ</Link> | <span style={{ fontWeight: 'bold', color: '#ffb300' }}>Giỏ hàng</span>
-            </Typography>
+        <div className='container'>
+            <Box sx={{ mb: 10, mt: 3, fontFamily: 'Quicksand' }}>
+                <Typography sx={{ color: '#666', fontSize: '13px', mb: 3 }}>
+                    <Link to="/" style={{ color: '#666', textDecoration: 'none' }}>Trang chủ</Link> | <span style={{ fontWeight: 'bold', color: '#ffb300' }}>Giỏ hàng</span>
+                </Typography>
 
-            <Typography variant="h5" sx={{ fontWeight: 900, mb: 4 }}>
-                GIỎ HÀNG
-            </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 900, mb: 4 }}>
+                    GIỎ HÀNG
+                </Typography>
 
-            {cartLoading && cartItems.length === 0 ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}><CircularProgress sx={{ color: '#ffb300' }} /></Box>
-            ) : cartItems.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 8, backgroundColor: '#fff', borderRadius: 2 }}>
-                    <Typography sx={{ color: '#888', mb: 3 }}>Giỏ hàng của bạn đang trống</Typography>
-                    <Link to="/" className="btn" style={{ backgroundColor: '#ffb300', fontWeight: 'bold' }}>Tiếp tục mua sắm</Link>
-                </Box>
-            ) : (
-                <>
-                    <CartTable
-                        cartItems={cartItems}
-                        selectedIds={selectedIds}
-                        onSelect={handleSelect}
-                        onSelectAll={handleSelectAll}
-                        onUpdateQuantity={(cartId, quantity) => dispatch(updateCartItemRequest({ cartId, quantity }))}
-                        onDelete={confirmDelete}
-                    />
-                    <CartSummary
-                        totalAmount={totalAmount}
-                        totalSelectedItems={selectedIds.length}
-                        onSubmit={handleGoToCheckout}
-                    />
-                </>
-            )}
+                {cartLoading && cartItems.length === 0 ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}><CircularProgress sx={{ color: '#ffb300' }} /></Box>
+                ) : cartItems.length === 0 ? (
+                    <Box sx={{ textAlign: 'center', py: 8, backgroundColor: '#fff', borderRadius: 2 }}>
+                        <Typography sx={{ color: '#888', mb: 3 }}>Giỏ hàng của bạn đang trống</Typography>
+                        <Link to="/" className="btn" style={{ backgroundColor: '#ffb300', fontWeight: 'bold' }}>Tiếp tục mua sắm</Link>
+                    </Box>
+                ) : (
+                    <>
+                        <CartTable
+                            cartItems={cartItems}
+                            selectedIds={selectedIds}
+                            onSelect={handleSelect}
+                            onSelectAll={handleSelectAll}
+                            onUpdateQuantity={(cartId, quantity) => dispatch(updateCartItemRequest({ cartId, quantity }))}
+                            onDelete={confirmDelete}
+                        />
+                        <CartSummary
+                            totalAmount={totalAmount}
+                            totalSelectedItems={selectedIds.length}
+                            onSubmit={handleGoToCheckout}
+                        />
+                    </>
+                )}
 
-            {/* Gọi Component Tái sử dụng ở đây */}
-            <ConfirmDialog
-                open={deleteDialogOpen}
-                title="Xóa sản phẩm"
-                content="Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng không?"
-                onConfirm={executeDelete}
-                onCancel={cancelDelete}
-                confirmText="Đồng ý xóa"
-            />
-        </Box>
+                {/* Gọi Component Tái sử dụng ở đây */}
+                <ConfirmDialog
+                    open={deleteDialogOpen}
+                    title="Xóa sản phẩm"
+                    content="Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng không?"
+                    onConfirm={executeDelete}
+                    onCancel={cancelDelete}
+                    confirmText="Đồng ý xóa"
+                />
+            </Box>
+        </div>
     );
 };
 

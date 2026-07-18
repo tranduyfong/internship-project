@@ -10,7 +10,7 @@ export const chatService = {
         return apiClient<ApiResponse<ChatRoom[]>>('/chat/admin/rooms', { method: 'GET' });
     },
     getRoomMessages: (roomId: number, page: number = 1) => {
-        return apiClient<ApiResponse<ChatMessage[]>>(`/chat/rooms/${roomId}/messages?page=${page}`, { method: 'GET' });
+        return apiClient<ApiResponse<{ roomId: number, messages: ChatMessage[] }>>(`/chat/rooms/${roomId}/messages?page=${page}`, { method: 'GET' });
     },
     markAsRead: (roomId: number) => {
         return apiClient<ApiResponse<null>>(`/chat/rooms/${roomId}/read`, { method: 'PATCH' });

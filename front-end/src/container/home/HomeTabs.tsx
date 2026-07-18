@@ -9,7 +9,7 @@ interface HomeTabsProps {
 
 const HomeTabs: React.FC<HomeTabsProps> = ({ tabs, activeTab, onTabChange }) => {
     return (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 4, borderBottom: '2px solid #f0f0f0' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 1, mb: 4, borderBottom: '2px solid #f0f0f0' }}>
             {tabs.map((tab) => (
                 <Box
                     key={tab}

@@ -42,33 +42,35 @@ const ProductPage: React.FC = () => {
     }, [dispatch, currentPage, filters]);
 
     return (
-        <Box sx={{ mb: 5 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, mt: 2 }}>
-                <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
-                    TÌM ĐƯỢC {totalElements} SẢN PHẨM
-                </Typography>
-                <Button variant="outlined" onClick={() => setMobileFilterOpen(true)} startIcon={<FilterListIcon />} sx={{ display: { lg: 'none' }, borderColor: '#ccc', color: '#000', fontFamily: 'Quicksand', fontWeight: 'bold' }}>Lọc</Button>
-            </Box>
+        <div className='container px-0'>
+            <Box sx={{ mb: 5 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, mt: 2 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
+                        TÌM ĐƯỢC {totalElements} SẢN PHẨM
+                    </Typography>
+                    <Button variant="outlined" onClick={() => setMobileFilterOpen(true)} startIcon={<FilterListIcon />} sx={{ display: { lg: 'none' }, borderColor: '#ccc', color: '#000', fontFamily: 'Quicksand', fontWeight: 'bold' }}>Lọc</Button>
+                </Box>
 
-            <div className="row">
-                <div className="col-lg-3 d-none d-lg-block">
-                    <Box sx={{ position: 'sticky', top: '100px' }}>
+                <div className="row">
+                    <div className="col-lg-3 d-none d-lg-block">
+                        <Box sx={{ position: 'sticky', top: '100px' }}>
+                            <FilterSidebar filters={filters} onFilterChange={(f) => { setFilters(f); setCurrentPage(0); }} />
+                        </Box>
+                    </div>
+                    <div className="col-12 col-lg-9">
+                        {/* Lắp ráp lưới sản phẩm độc lập */}
+                        <ProductListGrid loading={productLoading} products={products} />
+                        <Pagination totalPages={totalPages} currentPage={currentPage} onPageChange={setCurrentPage} />
+                    </div>
+                </div>
+
+                <Drawer anchor="right" open={mobileFilterOpen} onClose={() => setMobileFilterOpen(false)}>
+                    <Box sx={{ width: 280, p: 2 }}>
                         <FilterSidebar filters={filters} onFilterChange={(f) => { setFilters(f); setCurrentPage(0); }} />
                     </Box>
-                </div>
-                <div className="col-12 col-lg-9">
-                    {/* Lắp ráp lưới sản phẩm độc lập */}
-                    <ProductListGrid loading={productLoading} products={products} />
-                    <Pagination totalPages={totalPages} currentPage={currentPage} onPageChange={setCurrentPage} />
-                </div>
-            </div>
-
-            <Drawer anchor="right" open={mobileFilterOpen} onClose={() => setMobileFilterOpen(false)}>
-                <Box sx={{ width: 280, p: 2 }}>
-                    <FilterSidebar filters={filters} onFilterChange={(f) => { setFilters(f); setCurrentPage(0); }} />
-                </Box>
-            </Drawer>
-        </Box>
+                </Drawer>
+            </Box>
+        </div>
     );
 };
 

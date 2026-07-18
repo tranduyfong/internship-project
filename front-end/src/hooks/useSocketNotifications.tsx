@@ -1,15 +1,18 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
-import PurchaseToast, { type PurchasePayload } from '../components/notifications/PurchaseToast';
+import PurchaseToast from '../components/notifications/PurchaseToast';
 
 const SOCKET_SERVER_URL = 'http://localhost:8000';
 
 const useSocketNotifications = () => {
+    const token = localStorage.getItem('access_token');
+
     useEffect(() => {
         const socket = io(SOCKET_SERVER_URL, {
             transports: ['websocket'],
             autoConnect: true,
+            auth: { token }
         });
 
         socket.on('new_purchase', (rawPayload: any) => {

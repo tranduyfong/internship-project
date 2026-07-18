@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Box, Typography, TextField, IconButton, Paper } from '@mui/material';
+import { useState, useRef, useEffect, type UIEvent } from 'react';
+import { Box, Typography, TextField, IconButton, Paper, CircularProgress, Button } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import type { ChatMessage, ChatRoom } from '../../types/types';
 
@@ -7,14 +7,24 @@ interface ChatWindowProps {
     activeRoom: ChatRoom | null;
     messages: ChatMessage[];
     onSendMessage: (text: string) => void;
+    onLoadMore: () => Promise<void>;
+    isLoadingMore: boolean;
+    hasMore: boolean;
 }
 
-const ChatWindow = ({ activeRoom, messages, onSendMessage }: ChatWindowProps) => {
+const ChatWindow = ({ activeRoom, messages, onSendMessage, onLoadMore, isLoadingMore, hasMore }: ChatWindowProps) => {
     const [text, setText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const previousScrollHeight = useRef<number>(0);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (previousScrollHeight.current > 0 && containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight - previousScrollHeight.current;
+            previousScrollHeight.current = 0;
+        } else {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
     }, [messages]);
 
     const handleSend = () => {
@@ -23,9 +33,17 @@ const ChatWindow = ({ activeRoom, messages, onSendMessage }: ChatWindowProps) =>
         setText('');
     };
 
+    // Vẫn giữ tính năng cuộn để dành cho ai vuốt mạnh lên trên
+    const handleScroll = async (e: UIEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLDivElement;
+        if (target.scrollTop <= 5 && hasMore && !isLoadingMore) {
+            previousScrollHeight.current = target.scrollHeight;
+            await onLoadMore();
+        }
+    };
+
     if (!activeRoom) {
         return (
-            // Dùng flex: 3 để chiếm 3 phần còn lại (tương đương 3/4 tổng không gian)
             <Box sx={{ flex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafa', height: '100%' }}>
                 <Typography color="textSecondary">Chọn một cuộc trò chuyện để bắt đầu</Typography>
             </Box>
@@ -33,7 +51,6 @@ const ChatWindow = ({ activeRoom, messages, onSendMessage }: ChatWindowProps) =>
     }
 
     return (
-        // Dùng flex: 3 ở đây nữa để bọc khung chat
         <Box sx={{ flex: 3, display: 'flex', flexDirection: 'column', backgroundColor: '#f9fafa', height: '100%' }}>
             <Box sx={{ p: 2, backgroundColor: '#fff', borderBottom: '1px solid #eee' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -41,7 +58,32 @@ const ChatWindow = ({ activeRoom, messages, onSendMessage }: ChatWindowProps) =>
                 </Typography>
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box
+                ref={containerRef}
+                onScroll={handleScroll}
+                sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+                {/* ĐÃ SỬA: Thêm nút bấm thủ công cực xịn sò dành cho màn hình không có thanh cuộn */}
+                {hasMore && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => {
+                                if (containerRef.current) {
+                                    previousScrollHeight.current = containerRef.current.scrollHeight;
+                                }
+                                onLoadMore();
+                            }}
+                            disabled={isLoadingMore}
+                            sx={{ textTransform: 'none', borderRadius: 5, fontSize: '12px' }}
+                        >
+                            {isLoadingMore ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : null}
+                            {isLoadingMore ? 'Đang tải...' : 'Xem thêm tin nhắn cũ'}
+                        </Button>
+                    </Box>
+                )}
+
                 {messages.map((msg) => {
                     const isMe = msg.sender_type === 'STAFF';
                     return (

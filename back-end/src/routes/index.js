@@ -8,6 +8,7 @@ const receiptRoutes = require('./receipt.routes');
 const analyticRoutes = require('./analytics.routes');
 const inventoryRoutes = require('./inventory.routes');
 const chatRoutes = require('./chat.routes');
+const bannerRoutes = require('./banner.routes');
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use('/receipts', receiptRoutes);
 router.use('/analytics', analyticRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/chat', chatRoutes);
+router.use('/banners', bannerRoutes);
 
 module.exports = router;

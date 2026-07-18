@@ -68,49 +68,51 @@ const ProfilePage: React.FC = () => {
     if (!fullProfile) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress sx={{ color: '#ffb300' }} /></Box>;
 
     return (
-        <Box sx={{ mt: 5, mb: 10, fontFamily: 'Quicksand' }}>
-            <Typography variant="h4" sx={{ fontWeight: 900, mb: 4 }}>TÀI KHOẢN</Typography>
-            <div className="row g-4">
-                <div className="col-12 col-md-4 col-lg-3">
-                    <ProfileSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className='container'>
+            <Box sx={{ mt: 5, mb: 10, fontFamily: 'Quicksand' }}>
+                <Typography variant="h4" sx={{ fontWeight: 900, mb: 4 }}>TÀI KHOẢN</Typography>
+                <div className="row g-4">
+                    <div className="col-12 col-md-4 col-lg-3">
+                        <ProfileSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                    </div>
+
+                    <div className="col-12 col-md-8 col-lg-9">
+                        {activeTab === 'info' && (
+                            <ProfileInfoForm profile={fullProfile} onUpdate={(name, phone) => dispatch(updateProfileRequest({ name, phone }))} />
+                        )}
+                        {activeTab === 'address' && (
+                            <AddressList
+                                addresses={fullProfile.addresses || []}
+                                onSetDefault={(id) => dispatch(setDefaultAddressRequest(id))}
+                                onOpenAdd={handleOpenAdd}
+                                onEdit={handleOpenEdit}
+                                onDelete={confirmDelete}
+                            />
+                        )}
+                        {/* Render Form đổi mật khẩu khi chọn tab password */}
+                        {activeTab === 'password' && (
+                            <ChangePassword />
+                        )}
+                    </div>
                 </div>
 
-                <div className="col-12 col-md-8 col-lg-9">
-                    {activeTab === 'info' && (
-                        <ProfileInfoForm profile={fullProfile} onUpdate={(name, phone) => dispatch(updateProfileRequest({ name, phone }))} />
-                    )}
-                    {activeTab === 'address' && (
-                        <AddressList
-                            addresses={fullProfile.addresses || []}
-                            onSetDefault={(id) => dispatch(setDefaultAddressRequest(id))}
-                            onOpenAdd={handleOpenAdd}
-                            onEdit={handleOpenEdit}
-                            onDelete={confirmDelete}
-                        />
-                    )}
-                    {/* Render Form đổi mật khẩu khi chọn tab password */}
-                    {activeTab === 'password' && (
-                        <ChangePassword />
-                    )}
-                </div>
-            </div>
+                <AddressFormDialog
+                    open={dialogOpen}
+                    onClose={() => setDialogOpen(false)}
+                    onSubmit={handleSubmitAddress}
+                    initialData={editingAddress}
+                />
 
-            <AddressFormDialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-                onSubmit={handleSubmitAddress}
-                initialData={editingAddress}
-            />
-
-            <ConfirmDialog
-                open={confirmDeleteOpen}
-                title="Xóa địa chỉ"
-                content="Bạn có chắc chắn muốn xóa địa chỉ này khỏi sổ địa chỉ không?"
-                onConfirm={executeDelete}
-                onCancel={() => setConfirmDeleteOpen(false)}
-                confirmText="Đồng ý xóa"
-            />
-        </Box>
+                <ConfirmDialog
+                    open={confirmDeleteOpen}
+                    title="Xóa địa chỉ"
+                    content="Bạn có chắc chắn muốn xóa địa chỉ này khỏi sổ địa chỉ không?"
+                    onConfirm={executeDelete}
+                    onCancel={() => setConfirmDeleteOpen(false)}
+                    confirmText="Đồng ý xóa"
+                />
+            </Box>
+        </div>
     );
 };
 

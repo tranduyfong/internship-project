@@ -7,7 +7,7 @@ const Layout: React.FC = () => {
     return (
         <div className="d-flex flex-column min-vh-100">
             <Header />
-            <main className="grow container py-5">
+            <main className="grow container-fluid py-5">
                 <Outlet />
             </main>
             <Footer />

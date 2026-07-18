@@ -47,7 +47,7 @@ const LoginPage = () => {
             <Box className="card p-5 shadow text-center" sx={{ width: 400, borderRadius: 2 }}>
 
                 <Typography variant="h4" color="primary" sx={{ fontWeight: 700, mb: 4 }}>
-                    Đăng nhập Admin
+                    Đăng nhập Nhân viên
                 </Typography>
 
                 <TextField fullWidth variant="outlined" label="Email" margin="normal" value={email} onChange={(e) => setEmail(e.target.value)} />

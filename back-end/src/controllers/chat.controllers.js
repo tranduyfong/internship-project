@@ -12,20 +12,21 @@ const getRoomList = async (req, res) => {
 
 const getMessageHistory = async (req, res) => {
     try {
-        let roomId = req.params.roomId;
+        let currentRoomId = req.params.roomId;
         const page = parseInt(req.query.page) || 1;
         const role = req.user.role;
 
-        // Nếu là khách hàng (USER), họ gọi API không truyền roomId cũng được, hệ thống tự tìm
-        if (role === 'user') {
-            roomId = await chatService.getOrCreateRoom(req.user.userId);
+        // Xử lý tự động tìm phòng cho Khách hàng
+        if (role === 'user' || role === 'USER') {
+            currentRoomId = await chatService.getOrCreateRoom(req.user.userId || req.user.id);
         }
 
-        if (!roomId) return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID phòng chat', 400);
+        if (!currentRoomId) return errorResponse(res, 'VALIDATION_FAILED', 'Thiếu ID phòng chat', 400);
 
-        const messages = await chatService.getMessages(roomId, page);
+        const messages = await chatService.getMessages(currentRoomId, page);
 
-        return successResponse(res, messages, null, 'Lấy lịch sử tin nhắn thành công');
+        // TRẢ VỀ CẢ ROOM ID VÀ TIN NHẮN
+        return successResponse(res, { roomId: currentRoomId, messages }, null, 'Lấy lịch sử tin nhắn thành công');
     } catch (error) {
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
     }
@@ -33,15 +34,15 @@ const getMessageHistory = async (req, res) => {
 
 const markAsRead = async (req, res) => {
     try {
-        let roomId = req.params.roomId;
+        let currentRoomId = req.params.roomId;
         const role = req.user.role;
-        const readerType = role === 'user' ? 'customer' : 'staff';
+        const readerType = (role === 'user' || role === 'USER') ? 'customer' : 'staff';
 
-        if (role === 'user') {
-            roomId = await chatService.getOrCreateRoom(req.user.userId);
+        if (role === 'user' || role === 'USER') {
+            currentRoomId = await chatService.getOrCreateRoom(req.user.userId || req.user.id);
         }
 
-        await chatService.markMessagesAsRead(roomId, readerType);
+        await chatService.markMessagesAsRead(currentRoomId, readerType);
         return successResponse(res, null, null, 'Đã đánh dấu đọc tin nhắn');
     } catch (error) {
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
@@ -50,12 +51,19 @@ const markAsRead = async (req, res) => {
 
 const getUnreadBadge = async (req, res) => {
     try {
-        const userId = req.user.userId;
-        const role = req.user.role.toUpperCase();
+        const userId = req.user.userId || req.user.id;
+        const role = req.user.role ? req.user.role.toUpperCase() : 'USER';
 
         const count = await chatService.getUnreadCount(userId, role);
 
-        return successResponse(res, { unreadCount: count }, null, 'Lấy số tin nhắn chưa đọc thành công');
+        // KHAI BÁO BIẾN Ở ĐÂY ĐỂ TRÁNH LỖI "roomId is not defined"
+        let fetchedRoomId = null;
+        if (role === 'USER') {
+            fetchedRoomId = await chatService.getOrCreateRoom(userId);
+        }
+
+        // TRẢ VỀ CẢ SỐ LƯỢNG VÀ ID PHÒNG
+        return successResponse(res, { unreadCount: count, roomId: fetchedRoomId }, null, 'Lấy số tin nhắn chưa đọc thành công');
     } catch (error) {
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Lỗi hệ thống', 500, null, error.message);
     }

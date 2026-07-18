@@ -1,12 +1,14 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, IconButton } from '@mui/material';
-import Grid from '@mui/material/Grid'; // Đảm bảo import đúng Grid
+import {
+    Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, IconButton, Alert,
+    Grid, Radio, RadioGroup, FormControlLabel, FormControl
+} from '@mui/material'; // Thêm import các component Radio của MUI
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import { toast } from 'react-toastify';
 import FormInput from './FormInput';
 import ImagePreview from './ImagePreview';
 import type { ProductImage } from '../types/types';
-import { toast } from 'react-toastify';
 
 interface ProductFormModalProps {
     open: boolean;
@@ -18,8 +20,14 @@ interface ProductFormModalProps {
 
 const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản phẩm", initialData }: ProductFormModalProps) => {
     const [loading, setLoading] = useState(false);
+    const [sizeError, setSizeError] = useState<string>('');
+
     const [formValues, setFormValues] = useState({
-        name_product: '', price_product: '', importPrice: '', descript_product: '', brand: ''
+        name_product: '',
+        price_product: '',
+        importPrice: '',
+        descript_product: '',
+        brand: 'Nike'
     });
     const [sizes, setSizes] = useState<{ size: string, quantity: string }[]>([{ size: '', quantity: '' }]);
     const [newImages, setNewImages] = useState<File[]>([]);
@@ -27,13 +35,15 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
     const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
 
     useEffect(() => {
+        setSizeError('');
+
         if (initialData && open) {
             setFormValues({
                 name_product: initialData.name_product || '',
                 price_product: initialData.price_product || '',
                 importPrice: initialData.import_price || '',
                 descript_product: initialData.descript_product || '',
-                brand: initialData.brand || ''
+                brand: initialData.brand || 'Nike'
             });
 
             if (initialData.sizes && initialData.sizes.length > 0) {
@@ -46,7 +56,7 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
             setNewImages([]);
             setDeletedImageIds([]);
         } else if (!open) {
-            setFormValues({ name_product: '', price_product: '', importPrice: '', descript_product: '', brand: '' });
+            setFormValues({ name_product: '', price_product: '', importPrice: '', descript_product: '', brand: 'Nike' });
             setSizes([{ size: '', quantity: '' }]);
             setNewImages([]);
             setExistingImages([]);
@@ -87,7 +97,6 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setLoading(true);
 
         const sizeValues = sizes
             .filter(item => item.size.trim() !== '')
@@ -99,6 +108,8 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
             toast.error("Không được nhập các Size trùng nhau. Vui lòng kiểm tra lại!");
             return;
         }
+
+        setLoading(true);
 
         const data = new FormData();
         data.append('name_product', formValues.name_product);
@@ -130,15 +141,19 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
             <form onSubmit={handleSubmit}>
                 <DialogContent sx={{ p: 4, backgroundColor: '#fafafa' }}>
                     <Grid container spacing={5}>
-
-                        {/* Đã sửa: Bỏ prop "item" và dùng prop "size" thay cho xs/md đối với MUI bản mới (hoặc truyền thẳng không cần item) */}
                         <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
                             <Box className="card p-4 shadow-sm border-0">
-                                {/* Đã sửa: Chuyển fontWeight, mb vào sx */}
                                 <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 700, mb: 2 }}>Thông tin cơ bản</Typography>
 
                                 <FormInput label="Tên sản phẩm" name="name_product" value={formValues.name_product} onChange={handleTextChange} required />
-                                <FormInput label="Thương hiệu" name="brand" value={formValues.brand} onChange={handleTextChange} required />
+
+                                <FormControl component="fieldset" sx={{ width: '100%', mt: 1, mb: 2, px: 1 }}>
+                                    <RadioGroup row name="brand" value={formValues.brand} onChange={handleTextChange}>
+                                        <FormControlLabel value="Nike" control={<Radio size="small" />} label="Nike" />
+                                        <FormControlLabel value="Adidas" control={<Radio size="small" />} label="Adidas" />
+                                        <FormControlLabel value="Puma" control={<Radio size="small" />} label="Puma" />
+                                    </RadioGroup>
+                                </FormControl>
 
                                 <Box sx={{ display: 'flex', gap: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                                     <FormInput label="Giá nhập" name="importPrice" type="number" value={formValues.importPrice} onChange={handleTextChange} required />
@@ -152,6 +167,13 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
                         <Grid sx={{ width: { xs: '100%', md: '41.6667%' } }}>
                             <Box className="card p-4 shadow-sm border-0 mb-4">
                                 <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 700, mb: 2 }}>Phân loại Kích cỡ</Typography>
+
+                                {sizeError && (
+                                    <Alert severity="error" sx={{ mb: 2 }}>
+                                        {sizeError}
+                                    </Alert>
+                                )}
+
                                 {sizes.map((item, index) => (
                                     <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
                                         <FormInput label="Size" type="number" value={item.size} onChange={(e) => handleSizeChange(index, 'size', e.target.value)} sx={{ mt: 0, mb: 0 }} required />

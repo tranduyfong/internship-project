@@ -4,14 +4,10 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 import store from './app/store';
 import Layout from './container/Layout';
-
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
-import { AboutPage, ContactPage } from './pages/Pages';
-
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -23,6 +19,9 @@ import ReceiptPage from './pages/ReceiptPage';
 import VNPayReturnPage from './pages/VNPayReturnPage';
 import SearchPage from './pages/SearchPage';
 import useSocketNotifications from './hooks/useSocketNotifications';
+import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
+import CustomerChatWidget from './components/chat/CustomerChatWidget';
 
 const theme = createTheme({
   typography: { fontFamily: "'Quicksand', sans-serif" },
@@ -36,6 +35,7 @@ const AppContent: React.FC = () => {
   return (
     <>
       <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
+      <CustomerChatWidget />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />

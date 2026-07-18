@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import { userService } from '../services/userService';
 import ProductPage from './ProductPage';
 import ChatPage from './ChatPage';
+import BannerPage from './BannerPage';
 
 const AdminPage = () => {
     const navigate = useNavigate();
@@ -44,6 +45,8 @@ const AdminPage = () => {
                 return <ProductPage userPermissions={permissions} />;
             case 'Chăm sóc khách hàng':
                 return <ChatPage />;
+            case 'Quản lý ảnh Banner':
+                return <BannerPage userPermissions={permissions} />;
             default:
                 return <div className="card p-4">Tính năng {activeTab} đang phát triển.</div>;
         }

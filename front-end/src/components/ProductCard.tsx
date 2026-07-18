@@ -106,7 +106,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </Box>
 
                 {/* Tên sản phẩm */}
-                <Typography sx={{ fontSize: '0.8rem', color: '#777', mt: 'auto', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <Typography sx={{ fontSize: '1rem', color: '#777', mt: 'auto', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {product.name_product}
                 </Typography>
             </Box>

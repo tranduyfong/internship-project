@@ -7,6 +7,7 @@ import { getProductsRequest } from '../store/actions/productActions';
 // Import các cấu phần biệt lập từ thư mục container mới tạo
 import HomeTabs from '../container/home/HomeTabs';
 import HomeProductGrid from '../container/home/HomeProductGrid';
+import BannerSlider from '../components/BannerSlider';
 
 const TABS = ['TẤT CẢ CÁC SẢN PHẨM', 'GIÀY NIKE', 'GIÀY ADIDAS', 'GIÀY PUMA'];
 
@@ -52,13 +53,17 @@ const HomePage: React.FC = () => {
     }, [products]);
 
     return (
-        <Box sx={{ mb: 5 }}>
-            {/* Lắp ráp khối thanh Tabs lựa chọn hãng */}
-            <HomeTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className='container-fluid px-0'>
+            <Box sx={{ mb: 5 }}>
+                <BannerSlider />
 
-            {/* Lắp ráp khối lưới hiển thị sản phẩm */}
-            <HomeProductGrid loading={productLoading} products={displayProducts} />
-        </Box>
+                {/* Lắp ráp khối thanh Tabs lựa chọn hãng */}
+                <HomeTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+
+                {/* Lắp ráp khối lưới hiển thị sản phẩm */}
+                <HomeProductGrid loading={productLoading} products={displayProducts} />
+            </Box>
+        </div>
     );
 };
 
