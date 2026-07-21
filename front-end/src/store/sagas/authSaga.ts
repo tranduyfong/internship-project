@@ -28,6 +28,7 @@ function* handleRegister(action: PayloadAction<any>): Generator<any, void, any> 
         yield put(reducers.setAuthLoading(true));
         const response = yield call(authService.register, action.payload);
         toast.success(response.message || 'Đăng ký thành công!');
+        window.location.href = '/dang-nhap';
     } catch (error: any) {
         toast.error(error.message || 'Đăng ký thất bại!');
     } {

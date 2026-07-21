@@ -15,7 +15,7 @@ const register = async (req, res) => {
         return successResponse(res, result, null, 'User registered successfully', 201);
     } catch (error) {
         if (error.message === 'USER_ALREADY_EXISTS') {
-            return errorResponse(res, 'USER_ALREADY_EXISTS', 'Tên người dùng đã tồn tại', 400);
+            return errorResponse(res, 'USER_ALREADY_EXISTS', 'Thông tin Email hoặc Số điện thoại đã tồn tại', 400);
         }
         return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Something went wrong', 500, null, error.message);
     }
@@ -32,7 +32,7 @@ const login = async (req, res) => {
         if (error.message === 'INVALID_CREDENTIALS') {
             return errorResponse(res, 'INVALID_CREDENTIALS', 'Email hoặc mật khẩu không đúng!', 400);
         }
-        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Something went wrong', 500, null, error.message);
+        return errorResponse(res, 'INTERNAL_SERVER_ERROR', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!', 500, null, error.message);
     }
 };
 

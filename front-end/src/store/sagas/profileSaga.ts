@@ -24,7 +24,7 @@ function* handleUpdateProfile(action: PayloadAction<{ name: string; phone: strin
         toast.success('Cập nhật thông tin thành công');
         yield put(actions.fetchProfileRequest());
     } catch (error: any) {
-        toast.error('Cập nhật hồ sơ thất bại');
+        toast.error('Số điện thoại đã được sử dụng!');
     } {
         yield put(reducers.setProfileLoading(false));
     }

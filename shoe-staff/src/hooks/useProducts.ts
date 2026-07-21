@@ -53,7 +53,7 @@ export const useProducts = (keyword: string, page: number) => {
             fetchProducts();
             return true; // Trả về true nếu thành công để đóng Modal
         } catch (error) {
-            toast.error("Lưu sản phẩm thất bại. Vui lòng thử lại!");
+            toast.error("Sản phẩm đã trùng tên hoặc có lỗi thất bại, vui lòng thử lại!");
             return false;
         }
     };

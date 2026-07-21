@@ -9,8 +9,8 @@ const registerUser = async (data) => {
 
     // 1. Kiểm tra xem email đã tồn tại chưa
     const [existingUsers] = await db.execute(
-        'SELECT id FROM users WHERE email = ?',
-        [email]
+        'SELECT id FROM users WHERE email = ? OR phone = ?',
+        [email, phone]
     );
 
     if (existingUsers.length > 0) {

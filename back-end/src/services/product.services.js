@@ -8,6 +8,15 @@ const createProduct = async (data, files) => {
     try {
         await connection.beginTransaction();
 
+        const [existingProduct] = await db.execute(
+            'SELECT id FROM products WHERE name_product = ?',
+            [name_product]
+        );
+
+        if (existingProduct.length > 0) {
+            throw new Error('PRODUCT_ALREADY_EXISTS');
+        }
+
         const [productResult] = await connection.execute(
             'INSERT INTO products (name_product, price_product, import_price, descript_product, brand) VALUES (?, ?, ?, ?, ?)',
             [name_product, price_product, importPrice, descript_product, brand]
@@ -196,6 +205,15 @@ const updateProduct = async (productId, updateData, files) => {
 
     try {
         await connection.beginTransaction();
+
+        const [existingProduct] = await db.execute(
+            'SELECT id FROM products WHERE name_product = ?',
+            [name_product]
+        );
+
+        if (existingProduct.length > 0) {
+            throw new Error('PRODUCT_ALREADY_EXISTS');
+        }
 
         // 1. Cập nhật thông tin cơ bản (Nếu có truyền lên)
         let updateFields = [];

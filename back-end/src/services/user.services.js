@@ -116,6 +116,16 @@ const getMyProfile = async (userId) => {
 
 const updateMyProfile = async (userId, data) => {
     const { name, phone } = data;
+
+    const [existingUsers] = await db.execute(
+        'SELECT id FROM users WHERE phone = ?',
+        [email, phone]
+    );
+
+    if (existingUsers.length > 0) {
+        throw new Error('USER_ALREADY_EXISTS');
+    }
+
     await db.execute(
         'UPDATE users SET name = ?, phone = ? WHERE id = ?',
         [name, phone, userId]
@@ -244,6 +254,15 @@ const updateUserByAdmin = async (userId, data) => {
     // Xây dựng mảng động để chỉ cập nhật những trường được truyền lên
     let updateFields = [];
     let queryParams = [];
+
+    const [existingUsers] = await db.execute(
+        'SELECT id FROM users WHERE phone = ?',
+        [phone]
+    );
+
+    if (existingUsers.length > 0) {
+        throw new Error('USER_ALREADY_EXISTS');
+    }
 
     if (name) {
         updateFields.push('name = ?');
