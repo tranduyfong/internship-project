@@ -10,9 +10,19 @@ interface InputFieldProps {
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     required?: boolean;
+    disabled?: boolean; // 1. Bổ sung thêm thuộc tính disabled ở đây
 }
 
-const InputField: React.FC<InputFieldProps> = ({ label, name, type = 'text', placeholder, value, onChange, required }) => {
+const InputField: React.FC<InputFieldProps> = ({
+    label,
+    name,
+    type = 'text',
+    placeholder,
+    value,
+    onChange,
+    required,
+    disabled // 2. Nhận prop disabled từ trên truyền xuống
+}) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
 
@@ -30,8 +40,15 @@ const InputField: React.FC<InputFieldProps> = ({ label, name, type = 'text', pla
                 value={value}
                 onChange={onChange}
                 required={required}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px', backgroundColor: 'white', fontFamily: 'Quicksand' } }}
-                // Sử dụng slotProps để truyền thuộc tính input an toàn cho mọi phiên bản MUI
+                disabled={disabled} // 3. Gắn vào thẻ TextField của MUI
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: '6px',
+                        // Khi disabled thì đổi màu nền nhẹ để người dùng dễ nhận biết ô bị khóa
+                        backgroundColor: disabled ? '#f5f5f5' : 'white',
+                        fontFamily: 'Quicksand'
+                    }
+                }}
                 slotProps={{
                     input: {
                         endAdornment: isPassword && (

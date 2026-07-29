@@ -3,8 +3,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "ngx-toastr/toastr";
 
 body {
     font-family: 'Quicksand', sans-serif;
     background-color: #F3F4F6;
+}
+
+/* Nới khoảng cách lề trên cho Toast Top-Center */
+#toast-container.toast-top-center {
+    top: 24px !important;
+    /* Cách mép trên màn hình 24px */
+}
+
+/* Tùy chỉnh nhẹ để hộp thông báo bo tròn đẹp hơn theo phong cách dự án */
+#toast-container>div {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 }

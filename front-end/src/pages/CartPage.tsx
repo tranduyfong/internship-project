@@ -9,6 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog'; // Import Component dù
 
 import { fetchCartRequest, updateCartItemRequest, deleteCartItemRequest } from '../store/actions/cartActions';
 import type { RootState } from '../app/store';
+import RecentlyViewedProducts from '../components/product/RecentlyViewedProducts';
 
 const CartPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -138,6 +139,10 @@ const CartPage: React.FC = () => {
                     onCancel={cancelDelete}
                     confirmText="Đồng ý xóa"
                 />
+
+                <Box sx={{ mt: 8, pt: 4, borderTop: '1px solid #eee' }}>
+                    <RecentlyViewedProducts />
+                </Box>
             </Box>
         </div>
     );

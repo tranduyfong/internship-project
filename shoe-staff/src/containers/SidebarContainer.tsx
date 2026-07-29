@@ -75,7 +75,7 @@ const SidebarContainer = ({ activeTab, onTabChange, userPermissions }: SidebarPr
             }}
         >
             <Box sx={{ p: 3, borderBottom: '1px solid #f0f0f0' }}>
-                <Typography variant="h5" color="primary" sx={{ fontWeight: 800 }}>Admin</Typography>
+                <Typography variant="h5" color="primary" sx={{ fontWeight: 800 }}>Hệ thống nhân viên Beck.</Typography>
             </Box>
 
             <List sx={{ mt: 1 }}>

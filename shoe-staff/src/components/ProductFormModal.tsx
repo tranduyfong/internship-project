@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, IconButton, Alert,
     Grid, Radio, RadioGroup, FormControlLabel, FormControl
-} from '@mui/material'; // Thêm import các component Radio của MUI
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { toast } from 'react-toastify';
@@ -21,6 +21,8 @@ interface ProductFormModalProps {
 const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản phẩm", initialData }: ProductFormModalProps) => {
     const [loading, setLoading] = useState(false);
     const [sizeError, setSizeError] = useState<string>('');
+    // BỔ SUNG: State lưu trữ lỗi liên quan đến giá bán và giá nhập
+    const [priceError, setPriceError] = useState<string>('');
 
     const [formValues, setFormValues] = useState({
         name_product: '',
@@ -36,6 +38,7 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
 
     useEffect(() => {
         setSizeError('');
+        setPriceError(''); // BỔ SUNG: Reset lỗi giá khi mở/đóng modal
 
         if (initialData && open) {
             setFormValues({
@@ -67,6 +70,11 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
     const handleTextChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormValues(prev => ({ ...prev, [name]: value }));
+
+        // BỔ SUNG: Tự động xóa cảnh báo lỗi khi người dùng đang chỉnh sửa lại ô Giá nhập hoặc Giá bán
+        if (name === 'importPrice' || name === 'price_product') {
+            setPriceError('');
+        }
     };
 
     const handleSizeChange = (index: number, field: 'size' | 'quantity', value: string) => {
@@ -97,6 +105,18 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+
+        // BỔ SUNG: Chuyển đổi sang số thực để kiểm tra hợp lệ Giá Bán và Giá Nhập[cite: 17]
+        const importPriceNum = Number(formValues.importPrice);
+        const sellingPriceNum = Number(formValues.price_product);
+
+        // Kiểm tra xem giá bán có thấp hơn giá nhập hay không
+        if (sellingPriceNum < importPriceNum) {
+            const errorMsg = "Giá bán không được phép thấp hơn Giá nhập vào!";
+            setPriceError(errorMsg);
+            toast.error(errorMsg); // Hiển thị thông báo toast lỗi cho người dùng[cite: 17]
+            return; // Chặn không cho lưu xuống Backend[cite: 17]
+        }
 
         const sizeValues = sizes
             .filter(item => item.size.trim() !== '')
@@ -159,6 +179,13 @@ const ProductFormModal = ({ open, onClose, onSubmit, title = "Thêm mới sản 
                                     <FormInput label="Giá nhập" name="importPrice" type="number" value={formValues.importPrice} onChange={handleTextChange} required />
                                     <FormInput label="Giá bán" name="price_product" type="number" value={formValues.price_product} onChange={handleTextChange} required />
                                 </Box>
+
+                                {/* BỔ SUNG: Hiển thị thông báo Alert màu đỏ nếu nhập sai giá[cite: 17] */}
+                                {priceError && (
+                                    <Alert severity="error" sx={{ mb: 2 }}>
+                                        {priceError}
+                                    </Alert>
+                                )}
 
                                 <FormInput label="Mô tả sản phẩm" name="descript_product" value={formValues.descript_product} onChange={handleTextChange} multiline rows={5} sx={{ mb: 0 }} />
                             </Box>

@@ -118,8 +118,8 @@ const updateMyProfile = async (userId, data) => {
     const { name, phone } = data;
 
     const [existingUsers] = await db.execute(
-        'SELECT id FROM users WHERE phone = ?',
-        [email, phone]
+        'SELECT id FROM users WHERE phone = ? AND id != ?',
+        [phone, userId]
     );
 
     if (existingUsers.length > 0) {
@@ -255,13 +255,15 @@ const updateUserByAdmin = async (userId, data) => {
     let updateFields = [];
     let queryParams = [];
 
-    const [existingUsers] = await db.execute(
-        'SELECT id FROM users WHERE phone = ?',
-        [phone]
-    );
+    if (phone) {
+        const [existingUsers] = await db.execute(
+            'SELECT id FROM users WHERE phone = ? AND id != ?',
+            [phone, userId]
+        );
 
-    if (existingUsers.length > 0) {
-        throw new Error('USER_ALREADY_EXISTS');
+        if (existingUsers.length > 0) {
+            throw new Error('USER_ALREADY_EXISTS');
+        }
     }
 
     if (name) {

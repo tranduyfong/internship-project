@@ -42,10 +42,13 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @for (perm of systemPermissions; track perm.id) {
-                <label (click)="togglePermission(perm.id)"
+                <!-- 1. BỎ (click) Ở THẺ LABEL ĐI -->
+                <label
                     class="flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-gray-50/70 transition-all duration-150 cursor-pointer select-none">
 
+                    <!-- 2. GẮN SỰ KIỆN (change) TRỰC TIẾP VÀO CHECKBOX -->
                     <input type="checkbox" [checked]="isPermissionSelected(perm.id)"
+                        (change)="togglePermission(perm.id)"
                         class="mt-1 h-4 w-4 rounded-md border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
 
                     <div class="space-y-1">

@@ -11,6 +11,7 @@ import { getProductsRequest } from '../store/actions/productActions';
 import ProductCard from '../components/ProductCard'; // Thay bằng đường dẫn chuẩn component của bạn
 import ProductSkeleton from '../components/ProductSkeleton'; // Thay bằng đường dẫn chuẩn của bạn
 import Pagination from '../components/Pagination';
+import RecentlyViewedProducts from '../components/product/RecentlyViewedProducts';
 
 const SearchPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -84,6 +85,10 @@ const SearchPage: React.FC = () => {
                     />
                 </Box>
             )}
+
+            <Box sx={{ mt: 8 }}>
+                <RecentlyViewedProducts />
+            </Box>
         </Box>
     );
 };

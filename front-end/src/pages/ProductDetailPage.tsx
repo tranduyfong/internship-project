@@ -13,6 +13,9 @@ import ProductTabs from '../container/product-detail/ProductTabs';
 import { getProductDetailRequest } from '../store/actions/productActions';
 import { addToCartRequest } from '../store/actions/cartActions';
 
+import RecentlyViewedProducts from '../components/product/RecentlyViewedProducts';
+import { addProductToHistory } from '../utils/recentlyViewed';
+
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const dispatch = useDispatch();
@@ -28,6 +31,12 @@ const ProductDetailPage: React.FC = () => {
         if (id) dispatch(getProductDetailRequest(id));
         window.scrollTo(0, 0);
     }, [id, dispatch]);
+
+    useEffect(() => {
+        if (product) {
+            addProductToHistory(product);
+        }
+    }, [product]);
 
     if (detailLoading || !product) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress sx={{ color: '#ffb300' }} /></Box>;
@@ -109,6 +118,10 @@ const ProductDetailPage: React.FC = () => {
                         brand={product.brand}
                     />
                 </div>
+
+                <Box sx={{ mt: 5 }}>
+                    <RecentlyViewedProducts />
+                </Box>
             </Box>
         </div>
     );

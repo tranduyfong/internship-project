@@ -118,7 +118,18 @@ const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNum
     }
 
     let countQuery = 'SELECT COUNT(p.id) as total FROM products p' + whereString;
-    let dataQuery = 'SELECT p.* FROM products p' + whereString + ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+    let dataQuery = `
+        SELECT 
+            p.id, 
+            p.name_product, 
+            p.price_product, 
+            p.descript_product, 
+            p.brand, 
+            p.status, 
+            p.created_at, 
+            p.updated_at 
+        FROM products p
+    ` + whereString + ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
     const [countResult] = await db.execute(countQuery, queryParams);
     const totalElements = countResult[0].total;
@@ -175,7 +186,20 @@ const getProducts = async ({ keyword, brands, sizes, minPrice, maxPrice, pageNum
 };
 
 const getProductById = async (productId) => {
-    const [products] = await db.execute('SELECT * FROM products WHERE id = ?', [productId]);
+    const [products] = await db.execute(
+        `SELECT 
+            id, 
+            name_product, 
+            price_product, 
+            descript_product, 
+            brand, 
+            status, 
+            created_at, 
+            updated_at 
+         FROM products 
+         WHERE id = ?`,
+        [productId]
+    );
 
     if (products.length === 0) {
         throw new Error('PRODUCT_NOT_FOUND');

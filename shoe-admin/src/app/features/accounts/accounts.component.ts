@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr'; // 1. Thêm import ToastrService
 
 import { UserService } from '../../core/services/user.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
@@ -27,6 +28,7 @@ import { AccountTableComponent } from '../../shared/components/account-table/acc
 export class AccountsComponent implements OnInit, OnDestroy {
     private userService = inject(UserService);
     private cdr = inject(ChangeDetectorRef);
+    private toastr = inject(ToastrService); // 2. Tiêm ToastrService vào Component
 
     // Trạng thái chung
     users: any[] = [];
@@ -88,6 +90,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
             },
             error: () => {
                 this.isLoading = false;
+                this.toastr.error('Lỗi khi tải danh sách tài khoản!', 'Thất bại'); // 3. Thông báo lỗi khi tải trang thất bại
                 this.cdr.detectChanges();
             }
         });
@@ -142,8 +145,13 @@ export class AccountsComponent implements OnInit, OnDestroy {
 
         this.userService.updateUser(this.selectedUser.id, this.editForm).subscribe({
             next: () => {
+                this.toastr.success(`Đã cập nhật thông tin tài khoản ${this.selectedUser.name}!`, 'Thành công'); // 4. Thông báo cập nhật thành công
                 this.closeEditModal();
                 this.loadUsers(); // Tải lại bảng ngay sau khi sửa thành công
+            },
+            error: (err) => {
+                console.error('Lỗi cập nhật user:', err);
+                this.toastr.error('Cập nhật tài khoản thất bại. Vui lòng thử lại!', 'Thất bại'); // 5. Thông báo lỗi khi sửa thất bại
             }
         });
     }
@@ -163,11 +171,17 @@ export class AccountsComponent implements OnInit, OnDestroy {
     // Thực thi đảo trạng thái Khóa / Kích hoạt tài khoản
     confirmLockToggle() {
         const nextStatus = this.selectedUser.status === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
+        const actionLabel = nextStatus === 'LOCKED' ? 'Khóa' : 'Mở khóa';
 
         this.userService.updateUserStatus(this.selectedUser.id, nextStatus).subscribe({
             next: () => {
+                this.toastr.success(`Đã ${actionLabel.toLowerCase()} tài khoản ${this.selectedUser.name}!`, 'Thành công'); // 6. Thông báo trạng thái Khóa/Mở khóa thành công
                 this.closeLockModal();
                 this.loadUsers(); // Tải lại bảng sau khi thay đổi trạng thái thành công
+            },
+            error: (err) => {
+                console.error('Lỗi đổi trạng thái user:', err);
+                this.toastr.error(`${actionLabel} tài khoản thất bại. Vui lòng thử lại!`, 'Thất bại'); // 7. Thông báo lỗi Khóa/Mở khóa thất bại
             }
         });
     }

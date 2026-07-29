@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 import type { RootState } from '../app/store';
 import { getProductsRequest } from '../store/actions/productActions';
-
-// Import các cấu phần biệt lập từ thư mục container mới tạo
 import HomeTabs from '../container/home/HomeTabs';
 import HomeProductGrid from '../container/home/HomeProductGrid';
 import BannerSlider from '../components/BannerSlider';
+import { ButtonNavigateProduct } from '../components/ButtonProductNavigate';
+import ShopPolicies from '../components/ShopPolicies';
 
 const TABS = ['TẤT CẢ CÁC SẢN PHẨM', 'GIÀY NIKE', 'GIÀY ADIDAS', 'GIÀY PUMA'];
 
@@ -56,12 +56,12 @@ const HomePage: React.FC = () => {
         <div className='container-fluid px-0'>
             <Box sx={{ mb: 5 }}>
                 <BannerSlider />
-
-                {/* Lắp ráp khối thanh Tabs lựa chọn hãng */}
+                <div className="container">
+                    <ShopPolicies />
+                </div>
                 <HomeTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-
-                {/* Lắp ráp khối lưới hiển thị sản phẩm */}
                 <HomeProductGrid loading={productLoading} products={displayProducts} />
+                <ButtonNavigateProduct />
             </Box>
         </div>
     );

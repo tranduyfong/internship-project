@@ -5,6 +5,7 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { ButtonNavigateProduct } from '../components/ButtonProductNavigate';
 
 export const AboutPage: React.FC = () => {
     const navigate = useNavigate();
@@ -146,23 +147,7 @@ export const AboutPage: React.FC = () => {
                     <Typography sx={{ color: '#ccc', mb: 5, fontSize: '18px' }}>
                         Khám phá bộ sưu tập mới nhất của chúng tôi và tìm cho mình một người bạn đồng hành hoàn hảo ngay hôm nay.
                     </Typography>
-                    <Button
-                        variant="contained"
-                        size="large"
-                        onClick={() => navigate('/san-pham')}
-                        sx={{
-                            bgcolor: '#ffb300',
-                            color: '#000',
-                            fontWeight: 'bold',
-                            px: 5,
-                            py: 1.5,
-                            borderRadius: '30px',
-                            fontSize: '16px',
-                            '&:hover': { bgcolor: '#e6a323' }
-                        }}
-                    >
-                        MUA SẮM NGAY
-                    </Button>
+                    <ButtonNavigateProduct />
                 </Box>
             </Container>
         </Box>

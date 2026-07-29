@@ -26,7 +26,7 @@ const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({ formData, setForm
                             control={<Radio size="small" />}
                             label={<Typography sx={{ fontSize: '14px', fontFamily: 'Quicksand' }}>Thanh toán ngay với VNPAY</Typography>}
                         />
-                        <img src="https://vnpay.vn/s1/vnpay/logo.svg" alt="vnpay" style={{ height: 20 }} />
+                        <img src="https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg" alt="vnpay" style={{ height: 50 }} />
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr'; // 1. Nhúng ToastrService
 
 import { UserService } from '../../core/services/user.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
@@ -25,37 +26,37 @@ import { PermissionTableComponent } from './components/permission-table/permissi
 export class PermissionsComponent implements OnInit, OnDestroy {
     private userService = inject(UserService);
     private cdr = inject(ChangeDetectorRef);
+    private toastr = inject(ToastrService); // 2. Tiêm Toastr vào component
 
-    // Quản lý trạng thái bảng dữ liệu
     staffList: any[] = [];
     isLoading = true;
     searchTerm: string = '';
     pagination: any = { total: 0, totalPage: 1, currentPage: 1, limit: 10 };
 
-    // Đăng ký bộ lọc Debounce tìm kiếm
     private searchSubject = new Subject<string>();
     private searchSubscription!: Subscription;
 
-    // Quản lý trạng thái Modal Phân Quyền
     isModalOpen = false;
     selectedStaff: any = null;
     isModalLoading = false;
 
-    // Lưu danh mục tất cả quyền hiện có của hệ thống
     systemPermissions: any[] = [];
 
-    // Mảng chứa các ID quyền hạn được Tick chọn tạm thời trên Modal
-    selectedPermissionIds: number[] = [];
+    // 3. NÂNG CẤP: Dùng Set<number> để quản lý ID quyền chính xác tuyệt đối
+    selectedPermissionIds = new Set<number>();
 
     ngOnInit(): void {
-        // Tải danh mục quyền hệ thống trước, sau đó tải danh sách nhân viên
-        this.userService.getAllPermissions().subscribe(res => {
-            this.systemPermissions = res.data;
+        this.userService.getAllPermissions().subscribe({
+            next: (res) => {
+                this.systemPermissions = res.data || [];
+            },
+            error: () => {
+                this.toastr.error('Không thể tải danh sách quyền hệ thống!', 'Lỗi');
+            }
         });
 
         this.loadStaff();
 
-        // Thiết lập Debounce 0.5 giây cho tìm kiếm nhân viên
         this.searchSubscription = this.searchSubject.pipe(
             debounceTime(500),
             distinctUntilChanged()
@@ -74,23 +75,21 @@ export class PermissionsComponent implements OnInit, OnDestroy {
         this.isLoading = true;
         this.cdr.detectChanges();
 
-        const apiPage = this.pagination.currentPage - 1; // Ánh xạ trang UI (1, 2) -> API (0, 1)
+        const apiPage = this.pagination.currentPage - 1;
 
         this.userService.getStaff(this.searchTerm, apiPage, 10).subscribe({
             next: (res) => {
-                // Để bảng hiển thị mượt mà nhất, với mỗi nhân viên chúng ta tiến hành lấy sẵn quyền của họ
-                const staffRaw = res.data;
+                const staffRaw = res.data || [];
 
                 if (staffRaw.length === 0) {
                     this.staffList = [];
-                    this.pagination.total = res.totalElements;
-                    this.pagination.totalPage = res.totalPages;
+                    this.pagination.total = res.totalElements || 0;
+                    this.pagination.totalPage = res.totalPages || 1;
                     this.isLoading = false;
                     this.cdr.detectChanges();
                     return;
                 }
 
-                // Gọi đồng thời API lấy quyền của từng nhân viên để đồng bộ lên bảng danh sách
                 const permissionRequests = staffRaw.map((staff: any) =>
                     this.userService.getUserPermissions(staff.id)
                 );
@@ -99,7 +98,7 @@ export class PermissionsComponent implements OnInit, OnDestroy {
                     next: (permissionResults: any) => {
                         this.staffList = staffRaw.map((staff: any, index: number) => ({
                             ...staff,
-                            permissions: permissionResults[index].data || []
+                            permissions: permissionResults[index]?.data || []
                         }));
 
                         this.pagination.total = res.totalElements;
@@ -116,6 +115,7 @@ export class PermissionsComponent implements OnInit, OnDestroy {
             },
             error: () => {
                 this.isLoading = false;
+                this.toastr.error('Lỗi khi tải danh sách nhân viên!', 'Thất bại');
                 this.cdr.detectChanges();
             }
         });
@@ -126,23 +126,27 @@ export class PermissionsComponent implements OnInit, OnDestroy {
         this.loadStaff();
     }
 
-    // Mở Modal phân quyền và tải các quyền hiện tại của nhân viên
+    // Mở Modal và nạp quyền hiện tại vào Set
     openPermissionsModal(user: any) {
         this.selectedStaff = user;
         this.isModalOpen = true;
         this.isModalLoading = true;
-        this.selectedPermissionIds = [];
+        this.selectedPermissionIds.clear(); // Xóa sạch bộ nhớ tạm
         this.cdr.detectChanges();
 
         this.userService.getUserPermissions(user.id).subscribe({
             next: (res) => {
                 const userPerms = res.data || [];
-                this.selectedPermissionIds = userPerms.map((p: any) => p.id);
+                // Ép kiểu chuẩn Number để đảm bảo khớp 100% ID từ Backend
+                userPerms.forEach((p: any) => {
+                    this.selectedPermissionIds.add(Number(p.id));
+                });
                 this.isModalLoading = false;
                 this.cdr.detectChanges();
             },
             error: () => {
                 this.isModalLoading = false;
+                this.toastr.error('Không thể tải quyền của nhân viên này!', 'Lỗi');
                 this.cdr.detectChanges();
             }
         });
@@ -151,28 +155,46 @@ export class PermissionsComponent implements OnInit, OnDestroy {
     closePermissionsModal() {
         this.isModalOpen = false;
         this.selectedStaff = null;
+        this.selectedPermissionIds.clear();
     }
 
-    // Hàm xử lý việc Tick/Untick chọn quyền trên Modal
-    togglePermission(permissionId: number) {
-        const idx = this.selectedPermissionIds.indexOf(permissionId);
-        if (idx > -1) {
-            this.selectedPermissionIds.splice(idx, 1); // Bỏ chọn
+    togglePermission(permissionId: any) {
+        const id = Number(permissionId);
+        if (isNaN(id)) return;
+
+        if (this.selectedPermissionIds.has(id)) {
+            this.selectedPermissionIds.delete(id); // Nếu đang chọn -> Xóa
         } else {
-            this.selectedPermissionIds.push(permissionId); // Thêm chọn
+            this.selectedPermissionIds.add(id);    // Nếu chưa chọn -> Thêm
         }
     }
 
-    isPermissionSelected(permissionId: number): boolean {
-        return this.selectedPermissionIds.includes(permissionId);
+    isPermissionSelected(permissionId: any): boolean {
+        return this.selectedPermissionIds.has(Number(permissionId));
     }
 
-    // Gửi mảng các ID quyền đã chọn lên API để cập nhật quyền hạn mới
     savePermissions() {
-        this.userService.updateUserPermissions(this.selectedStaff.id, this.selectedPermissionIds).subscribe({
-            next: () => {
+        // Chuyển Set sang mảng số nguyên thuần túy, loại bỏ các giá trị NaN
+        const payloadIds = Array.from(this.selectedPermissionIds)
+            .map(id => Number(id))
+            .filter(id => !isNaN(id));
+
+        console.log('Danh sách ID quyền hạn chuẩn bị gửi lên API:', payloadIds);
+
+        this.userService.updateUserPermissions(this.selectedStaff.id, payloadIds).subscribe({
+            next: (res) => {
+                const count = payloadIds.length;
+                const message = count === 0
+                    ? `Đã thu hồi toàn bộ quyền hạn của nhân viên ${this.selectedStaff.name}!`
+                    : `Đã cấp ${count} quyền hạn cho nhân viên ${this.selectedStaff.name}!`;
+
+                this.toastr.success(message, 'Thành công');
                 this.closePermissionsModal();
-                this.loadStaff(); // Tải lại bảng ngay sau khi lưu để cập nhật badge hiển thị
+                this.loadStaff(); // Tải lại bảng để cập nhật danh sách thẻ quyền mới nhất
+            },
+            error: (err) => {
+                console.error('Lỗi lưu quyền:', err);
+                this.toastr.error('Không thể cập nhật quyền hạn. Vui lòng thử lại!', 'Thất bại');
             }
         });
     }

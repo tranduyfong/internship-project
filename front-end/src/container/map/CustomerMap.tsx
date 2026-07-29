@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
-import Map, { Popup } from 'react-map-gl/maplibre';
-import { Box, Typography, Button } from '@mui/material';
+import Map from 'react-map-gl/maplibre';
+import { Box } from '@mui/material';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { facilityMapService } from '../../service/facilityMap';
 import RegionClusterMarker from '../../components/map/RegionClusterMarker';
 import ExactLocationMarker from '../../components/map/ExactLocationMarker';
 import TerritoryMarker from '../../components/map/TerritoryMarker';
+import FacilityPopup from '../../components/map/FacilityPopup';
+import { osmStyle } from '../../utils/map.style';
 
 interface MapData {
     type: string;
@@ -17,29 +19,6 @@ interface MapData {
     center_lat: string;
     center_lng: string;
 }
-
-const osmStyle = {
-    version: 8,
-    sources: {
-        'osm-tiles': {
-            type: 'raster',
-            tiles: [
-                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-            ],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-        }
-    },
-    layers: [
-        {
-            id: 'osm-tiles-layer',
-            type: 'raster',
-            source: 'osm-tiles',
-            minzoom: 0,
-            maxzoom: 19
-        }
-    ]
-};
 
 const CustomerMap: React.FC = () => {
     const [mapData, setMapData] = useState<MapData[]>([]);
@@ -74,7 +53,6 @@ const CustomerMap: React.FC = () => {
             const map = mapRef.current.getMap();
             const currentZoom = map.getZoom();
 
-            // Lệnh flyTo tạo hiệu ứng máy quay lướt và thu phóng rất đẹp
             map.flyTo({
                 center: [lng, lat],
                 zoom: currentZoom + 2.5, // Phóng to thêm 2.5 cấp
@@ -88,7 +66,7 @@ const CustomerMap: React.FC = () => {
         <Box sx={{ width: '100%', height: '70vh', borderRadius: 4, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
             <Map
                 ref={mapRef}
-                initialViewState={{ longitude: 105.812189, latitude: 21.011906, zoom: 5 }}
+                initialViewState={{ longitude: 105.812189, latitude: 21.011906, zoom: 12 }}
                 mapStyle={osmStyle as any}
                 onMoveEnd={fetchMapData}
                 onLoad={fetchMapData}
@@ -101,7 +79,7 @@ const CustomerMap: React.FC = () => {
                     const lat = parseFloat(item.center_lat);
                     const lng = parseFloat(item.center_lng);
 
-                    if (item.type === 'REGION_CLUSTER' || item.type === 'PROVINCE_CLUSTER') {
+                    if (item.type === 'REGION_CLUSTER' || item.type === 'GRID_CLUSTER') {
                         return (
                             <RegionClusterMarker
                                 key={`cluster-${index}`}
@@ -130,26 +108,10 @@ const CustomerMap: React.FC = () => {
 
                 {/* POPUP HIỂN THỊ KHI CLICK VÀO CƠ SỞ CHI TIẾT */}
                 {selectedFacility && (
-                    <Popup
-                        longitude={parseFloat(selectedFacility.center_lng)}
-                        latitude={parseFloat(selectedFacility.center_lat)}
-                        anchor="bottom"
+                    <FacilityPopup
+                        facility={selectedFacility as any}
                         onClose={() => setSelectedFacility(null)}
-                        closeOnClick={false}
-                        offset={40} // Đẩy popup lên một chút để không che mất icon
-                    >
-                        <Box sx={{ p: 1, minWidth: 200, fontFamily: 'Quicksand' }}>
-                            <Typography sx={{ fontWeight: 900, fontSize: '15px', mb: 0.5, color: '#111' }}>
-                                {selectedFacility.name}
-                            </Typography>
-                            <Typography sx={{ fontSize: '12px', color: '#666', mb: 2 }}>
-                                {selectedFacility.address}
-                            </Typography>
-                            <Button variant="contained" fullWidth size="small" sx={{ bgcolor: '#ffb300', color: '#000', fontWeight: 'bold' }}>
-                                Xem đường đi
-                            </Button>
-                        </Box>
-                    </Popup>
+                    />
                 )}
             </Map>
         </Box>
